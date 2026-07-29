@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video SEO & Content Scanner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: #f4f7f6; color: #333; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar */
+        sidebar { width: 280px; background: #ffffff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; font-size: 18px; font-weight: 700; color: #1e293b; border-bottom: 1px solid #e2e8f0; }
+        .nav-links { padding: 20px; flex: 1; overflow-y: auto; }
+        .history-item { padding: 10px 12px; margin-bottom: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+        .history-item:hover { background: #e2e8f0; }
+        
+        /* Main Content */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .top-bar { padding: 20px 30px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .user-info { font-weight: 600; color: #475569; }
+        .logout-btn { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; text-decoration: none; }
+        .logout-btn:hover { background: #dc2626; }
+
+        .container { padding: 30px; max-width: 950px; width: 100%; margin: 0 auto; }
+        .upload-card { background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid #e2e8f0; }
+        .upload-card h2 { margin-bottom: 15px; font-size: 20px; color: #1e293b; }
+        
+        input[type="file"] { margin-bottom: 15px; width: 100%; padding: 10px; border: 1px dashed #cbd5e1; border-radius: 6px; background: #f8fafc; }
+        button.scan-btn { background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; width: 100%; transition: background 0.2s; }
+        button.scan-btn:hover { background: #1d4ed8; }
+
+        /* Report Display Area */
+        .report-card { background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; display: none; }
+        
+        .tag-badge { background: #e0f2fe; color: #0369a1; padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; }
+        .loader { display: none; text-align: center; padding: 20px; font-weight: 500; color: #64748b; }
+        
+        .save-btn { background: #10b981; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 13px; transition: background 0.2s; }
+        .save-btn:hover { background: #059669; }
+
+        .share-btn { border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; color: white; display: inline-flex; align-items: center; gap: 5px; transition: opacity 0.2s; }
+        .share-btn:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+    <sidebar>
+        <div class="sidebar-header">📊 Scan History</div>
+        <div class="nav-links" id="history-list">
+            <!-- Dynamic history items load here -->
+        </div>
+    </sidebar>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <h2>Welcome, {{ username }}</h2>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+
+        <div class="container">
+            <div class="upload-card">
+                <h2>Upload Video for SEO & Compliance Scan</h2>
+                <form id="upload-form">
+                    <input type="file" id="video-file" name="video" accept="video/*" required>
+                    <button type="submit" class="scan-btn">Run Video Scan</button>
+                </form>
+            </div>
+
+            <div class="loader" id="loader">Analyzing video with AI... Please wait (this may take a minute).</div>
+
+            <div class="report-card" id="report-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="font-size: 22px; color: #1e293b; margin: 0;">Analysis Report</h2>
+                    <button class="save-btn" onclick="saveReportText()">💾 Save Report</button>
+                </div>
+                <div id="report-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFullReportText = "";
+
+        document.getElementById('upload-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('video-file');
+            if (fileInput.files.length === 0) return;
+
+            const formData = new FormData();
+            formData.append('video', fileInput.files[0]);
+
+            document.getElementById('loader').style.display = 'block';
+            document.getElementById('report-card').style.display = 'none';
+
+            try {
+                const response = await fetch('/scan', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    renderReport(data.report);
+                    loadHistory();
+                } else {
+                    alert('Error: ' + (data.error || 'Scan failed'));
+                }
+            } catch (err) {
+                alert('Network or server error occurred.');
+            } finally {
+                document.getElementById('loader').style.display = 'none';
+            }
+        });
+
+        function renderReport(reportText) {
+            currentFullReportText = reportText;
+
+            let cleanText = reportText
+                .replace(/🏷️?\s*Thematic Tracking & Tags[\s\S]*$/gi, '')
+                .replace(/Thematic Tracking & Tags:[\s\S]*$/gi, '')
+                .replace(/KEYWORD_METRICS:[\s\S]*$/gi, '')
+                .replace(/Data unavailable/g, '')
+                .trim();
+
+            let scoreMatch = cleanText.match(/OVERALL_SCORE:\s*([^\n]+)/i);
+            let riskMatch = cleanText.match(/RISK_LEVEL:\s*([^\n]+)/i);
+            let visualMatch = cleanText.match(/VISUAL_ANALYSIS:\s*([^\n]+(?:\n(?![A-Z_]+:)[^\n]+)*)/i);
+            let transcriptMatch = cleanText.match(/TRANSCRIPT_CAPTIONS:\s*([\s\S]*?)(?=YOUTUBE_TITLES|YOUTUBE_DESCRIPTION|CHAPTER_MARKERS|OPPORTUNITY_AREAS|$)/i);
+            let titlesMatch = cleanText.match(/YOUTUBE_TITLES:\s*([\s\S]*?)(?=YOUTUBE_DESCRIPTION|CHAPTER_MARKERS|OPPORTUNITY_AREAS|$)/i);
+            let descMatch = cleanText.match(/YOUTUBE_DESCRIPTION:\s*([\s\S]*?)(?=CHAPTER_MARKERS|OPPORTUNITY_AREAS|$)/i);
+            let chaptersMatch = cleanText.match(/CHAPTER_MARKERS:\s*([\s\S]*?)(?=OPPORTUNITY_AREAS|$)/i);
+            let oppMatch = cleanText.match(/OPPORTUNITY_AREAS:\s*([\s\S]*)/i);
+
+            let metricsMatch = reportText.match(/KEYWORD_METRICS:\s*([\s\S]*?)(?=(?:Thematic Tracking & Tags|VIDEO_TAGS)|$)/i);
+            let metricsText = metricsMatch ? metricsMatch[1].trim() : "";
+
+            let tagsMatch = reportText.match(/(?:Thematic Tracking & Tags|VIDEO_TAGS)[:\s]+([^\n]+)/i);
+            let rawTags = tagsMatch ? tagsMatch[1] : "animation, shorts, viral, youtube shorts, cartoon, trending, 2d animation";
+            let tagArray = rawTags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+
+            let htmlOutput = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <h4 style="color: #475569; font-size: 13px; text-transform: uppercase; margin-bottom: 5px;">Overall Health Score</h4>
+                        <div style="font-size: 22px; font-weight: 700; color: #1e293b;">${scoreMatch ? scoreMatch[1].replace('/100', '').trim() : '75'}/100</div>
+                    </div>
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <h4 style="color: #475569; font-size: 13px; text-transform: uppercase; margin-bottom: 5px;">Risk & Compliance Status</h4>
+                        <div style="font-size: 22px; font-weight: 700; color: #16a34a;">${riskMatch ? riskMatch[1].trim() : 'Safe'}</div>
+                    </div>
+                </div>
+
+                ${visualMatch ? `
+                <div style="background: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+                    <h4 style="color: #1e293b; font-size: 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">👁️ Visual & Copyright Analysis</h4>
+                    <p style="color: #334155; font-size: 14px; line-height: 1.5;">${visualMatch[1].trim()}</p>
+                </div>` : ''}
+
+                ${transcriptMatch ? `
+                <div style="background: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+                    <h4 style="color: #1e293b; font-size: 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">💬 Transcript & Closed Captions</h4>
+                    <div style="color: #334155; font-size: 14px; line-height: 1.6; white-space: pre-wrap; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #f1f5f9;">${transcriptMatch[1].trim()}</div>
+                </div>` : ''}
+
+                ${titlesMatch ? `
+                <div style="background: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+                    <h4 style="color: #1e293b; font-size: 15px; margin-bottom: 8px;">📌 Optimized YouTube Titles</h4>
+                    <div style="color: #334155; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${titlesMatch[1].trim()}</div>
+                </div>` : ''}
+
+                ${descMatch ? `
+                <div style="background: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+                    <h4 style="color: #1e293b; font-size: 15px; margin-bottom: 8px;">📝 SEO Video Description</h4>
+                    <p style="color: #334155; font-size: 14px; line-height: 1.5;">${descMatch[1].trim()}</p>
+                </div>` : ''}
+
+                ${chaptersMatch ? `
+                <div style="background: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+                    <h4 style="color: #1e293b; font-size: 15px; margin-bottom: 8px;">⏱️ Chapter Markers</h4>
+                    <div style="color: #334155; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${chaptersMatch[1].trim()}</div>
+                </div>` : ''}
+
+                ${oppMatch ? `
+                <div style="background: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+                    <h4 style="color: #1e293b; font-size: 15px; margin-bottom: 8px;">🚀 Growth & Opportunity Areas</h4>
+                    <div style="color: #334155; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${oppMatch[1].trim()}</div>
+                </div>` : ''}
+
+                <div style="background: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+                    <h4 style="margin-bottom: 10px; font-size: 15px; color: #1e293b; display: flex; align-items: center; gap: 6px;">🏷️ Thematic Tracking & Tags</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px;">
+                        ${tagArray.map(tag => `<span class="tag-badge">${tag}</span>`).join('')}
+                    </div>
+                    ${metricsText ? `
+                    <h5 style="color: #475569; font-size: 13px; text-transform: uppercase; margin-bottom: 8px;">Estimated Keyword Competitiveness & Volume</h5>
+                    <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 13px; color: #334155; white-space: pre-wrap; line-height: 1.5;">${metricsText}</div>
+                    ` : ''}
+                </div>
+
+                <div style="background: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <h4 style="margin-bottom: 10px; font-size: 15px; color: #1e293b; display: flex; align-items: center; gap: 6px;">🌐 Quick Direct Share</h4>
+                    <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Push your optimized metadata straight to your preferred platform:</p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <button onclick="shareToYouTubeStudio()" class="share-btn" style="background: #ff0000;">▶️ YouTube Studio</button>
+                        <button onclick="shareToFacebook()" class="share-btn" style="background: #1877f2;">📘 Facebook</button>
+                        <button onclick="shareToInstagram()" class="share-btn" style="background: #e1306c;">📸 Instagram</button>
+                        <button onclick="shareToWhatsApp()" class="share-btn" style="background: #25d366;">💬 WhatsApp</button>
+                        <button onclick="shareToTwitter()" class="share-btn" style="background: #000000;">𝕏 Twitter / X</button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('report-container').innerHTML = htmlOutput;
+            document.getElementById('report-card').style.display = 'block';
+        }
+
+        function getShareableText() {
+            let descMatch = currentFullReportText.match(/YOUTUBE_DESCRIPTION:\s*([\s\S]*?)(?=CHAPTER_MARKERS|OPPORTUNITY_AREAS|$)/i);
+            let tagsMatch = currentFullReportText.match(/(?:Thematic Tracking & Tags|VIDEO_TAGS)[:\s]+([^\n]+)/i);
+            
+            let description = descMatch ? descMatch[1].trim() : "Check out my new video content!";
+            let tags = tagsMatch ? tagsMatch[1].trim() : "";
+            
+            return `${description}\n\nTags: ${tags}`;
+        }
+
+        function shareToYouTubeStudio() {
+            navigator.clipboard.writeText(getShareableText()).then(() => {
+                alert('Copied description & tags to clipboard! Opening YouTube Studio...');
+                window.open('https://studio.youtube.com', '_blank');
+            });
+        }
+
+        function shareToFacebook() {
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
+        }
+
+        function shareToInstagram() {
+            navigator.clipboard.writeText(getShareableText()).then(() => {
+                alert('Copied description & tags to clipboard for Instagram! Opening Instagram...');
+                window.open('https://www.instagram.com', '_blank');
+            });
+        }
+
+        function shareToWhatsApp() {
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(getShareableText())}`, '_blank');
+        }
+
+        function shareToTwitter() {
+            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(getShareableText())}`, '_blank');
+        }
+
+        function saveReportText() {
+            if (!currentFullReportText) return;
+            const blob = new Blob([currentFullReportText], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'video-seo-audit-report.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        async function loadHistory() {
+            try {
+                const res = await fetch('/history');
+                const data = await res.json();
+                const historyList = document.getElementById('history-list');
+                historyList.innerHTML = '';
+
+                if (data.history && data.history.length > 0) {
+                    data.history.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'history-item';
+                        div.innerHTML = `<strong>${item.filename}</strong><br><small style="color: #64748b;">Score: ${item.score} | ${item.date}</small>`;
+                        div.onclick = () => renderReport(item.report);
+                        historyList.appendChild(div);
+                    });
+                } else {
+                    historyList.innerHTML = '<p style="font-size: 13px; color: #64748b; padding: 5px;">No past scans found.</p>';
+                }
+            } catch (e) {
+                console.error('Failed to load history');
+            }
+        }
+
+        loadHistory();
+    </script>
+</body>
+</html>

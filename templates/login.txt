@@ -1,0 +1,4 @@
+Welcome to Gemini Scanner
+Sign in securely using your Google account.
+
+Continue with Google 
