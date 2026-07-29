@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for
 from scanner import analyze_video
 
 app = Flask(__name__)
@@ -12,14 +12,12 @@ def landing():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # Add your login logic here
         return redirect(url_for('index'))
     return render_template('login.txt')
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        # Add your signup logic here
         return redirect(url_for('index'))
     return render_template('signup.html')
 
