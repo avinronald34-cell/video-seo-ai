@@ -13,7 +13,7 @@ def landing():
 def login():
     if request.method == 'POST':
         return redirect(url_for('index'))
-    return render_template('login.txt')
+    return render_template('login.html')
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
