@@ -4,11 +4,10 @@ from google import genai
 def analyze_video(title, description):
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        return "Error: GEMINI_API_KEY environment variable is missing on Render. Please add it under Environment settings."
+        return "CRITICAL ERROR: GEMINI_API_KEY is not set in Render Environment variables. Please add it in your Render dashboard."
     
     try:
         client = genai.Client(api_key=api_key)
-        
         prompt = f"""
         Analyze the following YouTube video title and description for SEO optimization. 
         Provide high-ranking keyword suggestions, an optimized title, and actionable SEO improvements.
@@ -23,4 +22,4 @@ def analyze_video(title, description):
         )
         return response.text
     except Exception as e:
-        return f"Scan failed or timed out: {str(e)}. Please check your API key quota or try again."
+        return f"API Connection Error: {str(e)}"
