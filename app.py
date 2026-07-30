@@ -21,6 +21,11 @@ def signup():
         return redirect(url_for('index'))
     return render_template('signup.html')
 
+@app.route('/auth/google')
+def auth_google():
+    # Placeholder route to handle Google login clicks gracefully
+    return redirect(url_for('index'))
+
 @app.route('/dashboard', methods=['GET', 'POST'])
 def index():
     result = None
