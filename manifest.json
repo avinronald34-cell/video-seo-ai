@@ -7,7 +7,7 @@
   "scope": "/",
   "short_name": "VideoSEO",
   "start_url": "/",
-  "theme_color": "#000000",
+  "theme_color": "#ffffff",
   "id": "com.video.seoai.app",
   "description": "AI-powered tool for video SEO optimization and compliance scans."
 }
