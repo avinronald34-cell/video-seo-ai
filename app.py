@@ -1,9 +1,9 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 from scanner import analyze_video
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "fallback_secret_key")
+app.secret_key = os.environ.get("SECRET_KEY", "fallback_secret_key_123")
 
 @app.route('/')
 def landing():
@@ -12,21 +12,28 @@ def landing():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
+        session['user'] = request.form.get('email', 'user')
         return redirect(url_for('index'))
     return render_template('login.html')
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
+        session['user'] = request.form.get('email', 'user')
         return redirect(url_for('index'))
     return render_template('signup.html')
 
 @app.route('/auth/google', methods=['GET', 'POST'])
 def auth_google():
+    session['user'] = 'google_user'
     return redirect(url_for('index'))
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 def index():
+    # Require login session; redirect to landing if not logged in
+    if 'user' not in session:
+        return redirect(url_for('landing'))
+        
     result = None
     if request.method == 'POST':
         video_title = request.form.get('title')
@@ -36,6 +43,11 @@ def index():
         else:
             result = "Please enter a video title or description to run the scan."
     return render_template('index.html', result=result)
+
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    return redirect(url_for('landing'))
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
