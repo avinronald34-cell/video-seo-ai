@@ -1,0 +1,13 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "video-seo-ai.onrender",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "VideoSEO",
+  "start_url": "/",
+  "theme_color": "#000000",
+  "id": "com.video.seoai.app",
+  "description": "AI-powered tool for video SEO optimization and compliance scans."
+}
