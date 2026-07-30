@@ -23,7 +23,6 @@ def signup():
 
 @app.route('/auth/google', methods=['GET', 'POST'])
 def auth_google():
-    # Simulating a secure redirect after Google login verification
     return redirect(url_for('index'))
 
 @app.route('/dashboard', methods=['GET', 'POST'])
@@ -35,7 +34,7 @@ def index():
         if video_title or video_desc:
             result = analyze_video(video_title, video_desc)
         else:
-            result = "Please provide a title or description to scan."
+            result = "Please enter a video title or description to run the scan."
     return render_template('index.html', result=result)
 
 if __name__ == '__main__':
