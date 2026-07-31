@@ -151,12 +151,13 @@ def scan():
     ai_description = ""
     
     try:
+        # Securely retrieve API key from environment
         api_key = os.environ.get("GEMINI_API_KEY")
         client = genai.Client(api_key=api_key)
         
-        # Updated to standard model gemini-3.6-flash
+        # Call production stable model gemini-2.0-flash
         response_ai = client.models.generate_content(
-            model='gemini-3.6-flash',
+            model='gemini-2.0-flash',
             contents=f"Generate a catchy YouTube video title, a short SEO description, and 4 comma-separated tags for an uploaded video file named: {filename}"
         )
         if response_ai and response_ai.text:
