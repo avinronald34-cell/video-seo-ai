@@ -206,8 +206,8 @@ def scan():
         )
         
         response_ai = None
-        # Using the active model name `gemini-3.6-flash`
-        for m_name in ['gemini-3.6-flash']:
+        # Using the valid, active model ID gemini-3.6-flash
+        for m_name in ['gemini-3.6-flash', 'gemini-3.5-flash']:
             try:
                 diagnostic_logs.append(f"Attempting model: {m_name}")
                 response_ai = client.models.generate_content(
