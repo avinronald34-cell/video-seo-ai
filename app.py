@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, send_from_directory, request, redirect, url_for
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', template_folder='templates')
 
 @app.route('/')
 def index():
@@ -22,8 +22,6 @@ def scan():
     file = request.files['video']
     if file.filename == '':
         return "No selected file", 400
-    
-    # Placeholder for video processing logic
     return f"<h3>Successfully received video: {file.filename}</h3><p>AI SEO & Compliance scan in progress...</p><a href='/'>Upload another</a>"
 
 @app.route('/manifest.json')
