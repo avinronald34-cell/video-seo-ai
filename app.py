@@ -13,7 +13,6 @@ HTML_PAGE = """<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video SEO AI</title>
-    <meta name="theme-color" content="#000000">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -32,7 +31,7 @@ HTML_PAGE = """<!DOCTYPE html>
             max-width: 600px;
             width: 100%;
         }
-        header {
+        .app-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -40,29 +39,34 @@ HTML_PAGE = """<!DOCTYPE html>
             padding-bottom: 15px;
             margin-bottom: 20px;
         }
-        .header-title h1 { margin: 0; font-size: 24px; color: #111; }
-        .header-title p { margin: 5px 0 0 0; color: #666; font-size: 14px; }
-        .nav-links {
+        .app-title h1 { margin: 0; font-size: 22px; color: #111; }
+        .app-title p { margin: 4px 0 0 0; color: #666; font-size: 13px; }
+        .nav-menu {
             display: flex;
-            gap: 12px;
             align-items: center;
+            gap: 15px;
         }
-        .nav-links a {
+        .nav-menu a {
             color: #0066cc;
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
         }
-        .nav-links a:hover {
+        .nav-menu a:hover {
             text-decoration: underline;
         }
-        .btn-login {
+        .btn-login-action {
             background-color: #0066cc !important;
             color: white !important;
             padding: 6px 14px;
             border-radius: 4px;
+            text-decoration: none;
         }
-        button {
+        .btn-login-action:hover {
+            opacity: 0.9;
+            text-decoration: none !important;
+        }
+        button.primary-btn {
             background-color: #0066cc;
             color: white;
             border: none;
@@ -71,31 +75,31 @@ HTML_PAGE = """<!DOCTYPE html>
             cursor: pointer;
             margin-top: 10px;
         }
-        button:hover {
+        button.primary-btn:hover {
             background-color: #0055b3;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <div class="header-title">
+        <div class="app-header">
+            <div class="app-title">
                 <h1>Video SEO AI</h1>
                 <p>Welcome, Guest</p>
             </div>
-            <div class="nav-links">
+            <div class="nav-menu">
                 <a href="/history">Scan History</a>
                 <a href="/logout">Logout</a>
-                <a href="/login" class="btn-login">Login</a>
+                <a href="/login" class="btn-login-action">Login</a>
             </div>
-        </header>
+        </div>
 
         <main>
             <section>
                 <h2>Upload Video for SEO & Compliance Scan</h2>
                 <form action="/scan" method="POST" enctype="multipart/form-data">
                     <input type="file" name="video" required style="margin-bottom: 10px; display: block;">
-                    <button type="submit">Run Video Scan</button>
+                    <button type="submit" class="primary-btn">Run Video Scan</button>
                 </form>
             </section>
         </main>
@@ -157,9 +161,9 @@ def scan():
     ai_description = "Comprehensive AI-generated description optimized for search algorithms, engagement, and audience retention."
     
     try:
-        # Using the correct active model: gemini-2.0-flash
+        # Updated to the current stable model: gemini-2.5-flash
         response_ai = client.models.generate_content(
-            model='gemini-2.0-flash',
+            model='gemini-2.5-flash',
             contents=f"Generate a catchy YouTube video title, a short SEO description, and 4 comma-separated tags for an uploaded video file named: {filename}"
         )
         if response_ai and response_ai.text:
