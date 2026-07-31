@@ -79,12 +79,11 @@ def scan():
         if not api_key:
             return "Configuration Error: GEMINI_API_KEY environment variable is missing.", 500
         
-        # Initialize client with current SDK syntax
         client = genai.Client(api_key=api_key)
         
-        # Use stable Gemini flash model
+        # Updated to active model endpoint gemini-2.5-flash
         response_ai = client.models.generate_content(
-            model='gemini-2.0-flash',
+            model='gemini-2.5-flash',
             contents=f"Generate a catchy YouTube video title, a short SEO description, and 4 comma-separated tags for an uploaded video file named: {filename}"
         )
         
