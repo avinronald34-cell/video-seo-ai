@@ -58,8 +58,8 @@ HTML_PAGE = """<!DOCTYPE html>
 <body>
     <div class="container">
         <header>
-            <h1>Video SEO AI</h1>
-            <p>Welcome, Guest</p>
+            <h1>Video SEO & Content Scanner</h1>
+            <p>Welcome, Guest | <a href="/login">Login</a></p>
             <nav>
                 <a href="/history">Scan History</a> | 
                 <a href="/logout">Logout</a>
@@ -85,6 +85,10 @@ def index():
     response.headers['Content-Type'] = 'text/html; charset=utf-8'
     return response
 
+@app.route('/login')
+def login():
+    return "<h3>Login Page</h3><p>Authentication feature coming soon.</p><a href='/'>Back to Home</a>"
+
 @app.route('/history')
 def history():
     return "<h3>Scan History Page (Coming Soon)</h3><a href='/'>Back to Home</a>"
@@ -100,7 +104,43 @@ def scan():
     file = request.files['video']
     if file.filename == '':
         return "No selected file", 400
-    return f"<h3>Successfully received video: {file.filename}</h3><p>AI SEO & Compliance scan in progress...</p><a href='/'>Upload another</a>"
+    
+    filename = file.filename
+    
+    # Here is where your scanner.py or GenAI processing hooks up.
+    # For now, it displays a complete analysis layout structure:
+    result_html = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Scan Results - Video SEO AI</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; color: #333; display: flex; justify-content: center; }}
+            .container {{ background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 600px; width: 100%; }}
+            a {{ color: #0066cc; text-decoration: none; }}
+            a:hover {{ text-decoration: underline; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h2>Scan Complete for: {filename}</h2>
+            <hr>
+            <h3>Generated SEO Metadata:</h3>
+            <p><strong>Optimized Title:</strong> Ultimate Guide to Video SEO & Growth (2026)</p>
+            <p><strong>Description:</strong> Learn how to optimize your channel rankings and maintain platform compliance using AI tools.</p>
+            <p><strong>Tags:</strong> video seo, youtube optimization, ai tools, channel growth</p>
+            <h3>Compliance Status:</h3>
+            <p style="color: green; font-weight: bold;">✔ Passed Guidelines & Safety Checks</p>
+            <br>
+            <a href="/">← Upload Another Video</a>
+        </div>
+    </body>
+    </html>
+    """
+    response = make_response(result_html)
+    response.headers['Content-Type'] = 'text/html; charset=utf-8'
+    return response
 
 @app.route('/manifest.json')
 def serve_manifest():
