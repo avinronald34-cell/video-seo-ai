@@ -6,7 +6,35 @@ from google.genai import types
 
 app = Flask(__name__)
 
-HTML_PAGE = """<!DOCTYPE html>
+# Login page template shown first
+LOGIN_PAGE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Video SEO AI</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 40px; display: flex; justify-content: center; }
+        .container { background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px; width: 100%; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #0066cc; color: white; border: none; padding: 10px; width: 100%; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #0055b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Video SEO AI Login</h2>
+        <form action="/dashboard" method="GET">
+            <input type="email" placeholder="Email Address" required>
+            <input type="password" placeholder="Password" required>
+            <button type="submit">Sign In</button>
+        </form>
+    </div>
+</body>
+</html>"""
+
+# Main Dashboard Template
+DASHBOARD_PAGE = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -20,7 +48,7 @@ HTML_PAGE = """<!DOCTYPE html>
         .app-title p { margin: 4px 0 0 0; color: #666; font-size: 13px; }
         .nav-menu { display: flex; align-items: center; gap: 12px; }
         .nav-menu a { color: #0066cc; text-decoration: none; font-size: 14px; font-weight: 500; }
-        .btn-login-action { background-color: #0066cc !important; color: white !important; padding: 6px 14px; border-radius: 4px; text-decoration: none; }
+        .btn-login-action { background-color: #dc3545 !important; color: white !important; padding: 6px 14px; border-radius: 4px; text-decoration: none; }
         button.primary-btn { background-color: #0066cc; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; width: 100%; font-size: 16px; }
         button.primary-btn:hover { background-color: #0055b3; }
     </style>
@@ -30,12 +58,11 @@ HTML_PAGE = """<!DOCTYPE html>
         <div class="app-header">
             <div class="app-title">
                 <h1>Video SEO AI</h1>
-                <p>Welcome, Guest</p>
+                <p>Welcome, User</p>
             </div>
             <div class="nav-menu">
                 <a href="/history">Scan History</a>
-                <a href="/logout">Logout</a>
-                <a href="/login" class="btn-login-action">Login</a>
+                <a href="/" class="btn-login-action">Logout</a>
             </div>
         </div>
         <main>
@@ -53,19 +80,16 @@ HTML_PAGE = """<!DOCTYPE html>
 
 @app.route('/')
 def index():
-    return make_response(HTML_PAGE, 200, {'Content-Type': 'text/html; charset=utf-8'})
+    # Forces the root link to open the login page first
+    return make_response(LOGIN_PAGE, 200, {'Content-Type': 'text/html; charset=utf-8'})
 
-@app.route('/login')
-def login():
-    return make_response("<!DOCTYPE html><html><body><h2>Login</h2><p>Coming soon.</p><a href='/'>← Home</a></body></html>", 200, {'Content-Type': 'text/html; charset=utf-8'})
+@app.route('/dashboard')
+def dashboard():
+    return make_response(DASHBOARD_PAGE, 200, {'Content-Type': 'text/html; charset=utf-8'})
 
 @app.route('/history')
 def history():
-    return make_response("<!DOCTYPE html><html><body><h2>History</h2><p>No scans yet.</p><a href='/'>← Home</a></body></html>", 200, {'Content-Type': 'text/html; charset=utf-8'})
-
-@app.route('/logout')
-def logout():
-    return redirect(url_for('index'))
+    return make_response("<!DOCTYPE html><html><body><h2>History</h2><p>No scans yet.</p><a href='/dashboard'>← Dashboard</a></body></html>", 200, {'Content-Type': 'text/html; charset=utf-8'})
 
 @app.route('/scan', methods=['POST'])
 def scan():
@@ -78,7 +102,6 @@ def scan():
         if not api_key:
             return "Configuration Error: GEMINI_API_KEY environment variable is missing.", 500
         
-        # Explicitly enforce stable v1 configuration route via HttpOptions
         client = genai.Client(
             api_key=api_key,
             http_options=types.HttpOptions(api_version="v1")
@@ -86,7 +109,6 @@ def scan():
         
         prompt_text = f"Generate a catchy YouTube video title, a short SEO description, and 4 comma-separated tags for an uploaded video file named: {filename}"
         
-        # Using verified stable production model identifier
         response_ai = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=prompt_text
@@ -123,7 +145,7 @@ def scan():
             <h3>Compliance Status:</h3>
             <p style="color: green; font-weight: bold;">✔ Passed Guidelines & Safety Checks</p>
             <br>
-            <a href="/">← Upload Another Video</a>
+            <a href="/dashboard">← Back to Dashboard</a>
         </div>
     </body>
     </html>
