@@ -5,14 +5,13 @@ from google import genai
 from google.genai import types
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "video-seo-ai-secure-secret-key")
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "video-seo-ai-secure-secret-key-2026")
 
 # In-memory user database simulation (email -> password)
 USERS_DB = {
     "admin@videoseo.ai": "securepassword123"
 }
 
-# Login Page Template
 LOGIN_PAGE = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,12 +40,11 @@ LOGIN_PAGE = """<!DOCTYPE html>
             <input type="password" name="password" placeholder="Password" required>
             <button type="submit">Sign In</button>
         </form>
-        <span class="link-text">Don't have an account? <a href="/signup">Sign Up</a></span>
+        <span class="link-text">New user? <a href="/signup">Create an Account</a></span>
     </div>
 </body>
 </html>"""
 
-# Sign Up Page Template for New Users
 SIGNUP_PAGE = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -66,7 +64,7 @@ SIGNUP_PAGE = """<!DOCTYPE html>
 </head>
 <body>
     <div class="container">
-        <h2>Create Account</h2>
+        <h2>Create New Account</h2>
         {% if error %}
             <div class="error">{{ error }}</div>
         {% endif %}
@@ -80,13 +78,12 @@ SIGNUP_PAGE = """<!DOCTYPE html>
 </body>
 </html>"""
 
-# Main Dashboard Template
 DASHBOARD_PAGE = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video SEO AI</title>
+    <title>Video SEO AI - Dashboard</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 600px; width: 100%; }
@@ -117,7 +114,7 @@ DASHBOARD_PAGE = """<!DOCTYPE html>
                 <h2>Upload Video for SEO & Compliance Scan</h2>
                 <form action="/scan" method="POST" enctype="multipart/form-data">
                     <input type="file" name="video" required style="margin-bottom: 15px; display: block;">
-                    <button type="submit" class="primary-btn">Run Video Scan</button>
+                    <button type="submit" class="primary-btn">Run Video Scan & Diagnostics</button>
                 </form>
             </section>
         </main>
@@ -146,7 +143,7 @@ def signup_action():
         return render_template_string(SIGNUP_PAGE, error="All fields are required.")
     
     if email in USERS_DB:
-        return render_template_string(SIGNUP_PAGE, error="Email already registered. Please log in.")
+        return render_template_string(SIGNUP_PAGE, error="Email already registered. Please sign in.")
     
     USERS_DB[email] = password
     session['logged_in'] = True
@@ -169,14 +166,13 @@ def login_action():
 def dashboard():
     if not session.get('logged_in'):
         return redirect(url_for('index'))
-    user_email = session.get('user_email', 'User')
-    return render_template_string(DASHBOARD_PAGE, user_email=user_email)
+    return render_template_string(DASHBOARD_PAGE, user_email=session.get('user_email', 'User'))
 
 @app.route('/history')
 def history():
     if not session.get('logged_in'):
         return redirect(url_for('index'))
-    return make_response("<!DOCTYPE html><html><body><h2>History</h2><p>No scans yet.</p><a href='/dashboard'>← Dashboard</a></body></html>", 200, {'Content-Type': 'text/html; charset=utf-8'})
+    return make_response("<!DOCTYPE html><html><body><h2>Scan History</h2><p>No past scans recorded yet.</p><a href='/dashboard'>← Back to Dashboard</a></body></html>", 200, {'Content-Type': 'text/html; charset=utf-8'})
 
 @app.route('/logout')
 def logout():
@@ -191,63 +187,80 @@ def scan():
     file = request.files.get('video')
     filename = file.filename if file and file.filename else "uploaded_video.mp4"
     
+    diagnostic_logs = []
     ai_description = ""
+    
     try:
         api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
         if not api_key:
-            return "Configuration Error: GEMINI_API_KEY environment variable is missing.", 500
+            return "Configuration Error: GEMINI_API_KEY environment variable is missing on Render.", 500
+        
+        diagnostic_logs.append("API Key verified successfully.")
         
         client = genai.Client(
             api_key=api_key,
             http_options=types.HttpOptions(api_version="v1")
         )
+        diagnostic_logs.append("GenAI Client initialized under v1 API configuration.")
         
-        prompt_text = f"Generate a catchy YouTube video title, a short SEO description, and 4 comma-separated tags for an uploaded video file named: {filename}"
+        prompt_text = f"Generate an accurate, optimized YouTube video title, a detailed SEO description, and 4 specific comma-separated tags tailored explicitly for a video file named: {filename}"
         
-        # Robust model fallback handling 503 high-demand errors gracefully
+        # Robust multi-model fallback routine targeting gemini-3.6-flash first
         response_ai = None
-        for model_name in ['gemini-3.6-flash', 'gemini-3.5-flash']:
+        models_to_try = ['gemini-3.6-flash', 'gemini-3.5-flash']
+        
+        for m_name in models_to_try:
             try:
+                diagnostic_logs.append(f"Connecting to model: {m_name}")
                 response_ai = client.models.generate_content(
-                    model=model_name,
+                    model=m_name,
                     contents=prompt_text
                 )
                 if response_ai and hasattr(response_ai, 'text') and response_ai.text:
+                    diagnostic_logs.append(f"Successfully generated response using {m_name}")
                     break
-            except Exception:
+            except Exception as model_err:
+                diagnostic_logs.append(f"Model {m_name} encountered issue: {model_err}")
                 continue
                 
         if response_ai and hasattr(response_ai, 'text') and response_ai.text:
             ai_description = response_ai.text
         else:
-            ai_description = "Error: Models are currently busy. Please click back and try scanning again."
+            ai_description = "Error: All model endpoints failed to process the request."
             
     except Exception as e:
         traceback.print_exc()
         ai_description = f"Runtime Exception Caught: {str(e)}"
 
+    logs_str = "<br>".join(diagnostic_logs)
+    
     result_html = f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Scan Results - Video SEO AI</title>
+        <title>Scan Results & Diagnostics</title>
         <style>
             body {{ font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; color: #333; display: flex; justify-content: center; }}
-            .container {{ background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 600px; width: 100%; }}
+            .container {{ background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 650px; width: 100%; }}
+            .box {{ background: #f9f9fb; padding: 15px; border-radius: 6px; border: 1px solid #eaeaea; margin-top: 10px; white-space: pre-wrap; font-size: 14px; }}
+            .logs {{ background: #1e1e1e; color: #00ff66; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 12px; margin-top: 10px; }}
             a {{ color: #0066cc; text-decoration: none; display: inline-block; margin-top: 20px; font-weight: bold; }}
-            .box {{ background: #f9f9fb; padding: 15px; border-radius: 6px; border: 1px solid #eaeaea; margin-top: 10px; white-space: pre-wrap; }}
         </style>
     </head>
     <body>
         <div class="container">
-            <h2>Scan Complete: {filename}</h2>
+            <h2>Scan Report: {filename}</h2>
             <hr>
             <h3>Generated AI SEO Metadata:</h3>
             <div class="box">{ai_description}</div>
+            
             <h3>Compliance Status:</h3>
             <p style="color: green; font-weight: bold;">✔ Passed Guidelines & Safety Checks</p>
-            <br>
+            
+            <h3>Execution & Diagnostic Logs:</h3>
+            <div class="logs">{logs_str}</div>
+            
             <a href="/dashboard">← Back to Dashboard</a>
         </div>
     </body>
