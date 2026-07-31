@@ -81,7 +81,7 @@ def scan():
         
         client = genai.Client(api_key=api_key)
         
-        # Updated to active frontier model gemini-3.6-flash
+        # Using the standard active production model endpoint
         response_ai = client.models.generate_content(
             model='gemini-3.6-flash',
             contents=f"Generate a catchy YouTube video title, a short SEO description, and 4 comma-separated tags for an uploaded video file named: {filename}"
