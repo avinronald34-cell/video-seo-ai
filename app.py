@@ -81,16 +81,25 @@ def scan():
         
         client = genai.Client(api_key=api_key)
         
-        # Using current active stable model
-        response_ai = client.models.generate_content(
-            model='gemini-3.6-flash',
-            contents=f"Generate a catchy YouTube video title, a short SEO description, and 4 comma-separated tags for an uploaded video file named: {filename}"
-        )
+        prompt_text = f"Generate a catchy YouTube video title, a short SEO description, and 4 comma-separated tags for an uploaded video file named: {filename}"
+        
+        # Robust fallback mechanism across current models
+        response_ai = None
+        for model_name in ['gemini-3.6-flash', 'gemini-3.5-flash']:
+            try:
+                response_ai = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt_text
+                )
+                if response_ai and hasattr(response_ai, 'text') and response_ai.text:
+                    break
+            except Exception:
+                continue
         
         if response_ai and hasattr(response_ai, 'text') and response_ai.text:
             ai_description = response_ai.text
         else:
-            ai_description = "Error: The AI model returned an empty response block."
+            ai_description = "Error: All model endpoints failed to return a valid response block."
     except Exception as e:
         traceback.print_exc()
         ai_description = f"Runtime Exception Caught: {str(e)}"
