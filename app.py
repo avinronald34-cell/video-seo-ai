@@ -40,22 +40,28 @@ HTML_PAGE = """<!DOCTYPE html>
             padding-bottom: 15px;
             margin-bottom: 20px;
         }
-        .header-title h1 { margin: 0; font-size: 24px; }
+        .header-title h1 { margin: 0; font-size: 24px; color: #111; }
         .header-title p { margin: 5px 0 0 0; color: #666; font-size: 14px; }
-        .auth-nav a {
-            background-color: #0066cc;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 4px;
+        .nav-links {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .nav-links a {
+            color: #0066cc;
             text-decoration: none;
             font-size: 14px;
-            margin-left: 5px;
+            font-weight: 500;
         }
-        .auth-nav a.secondary {
-            background-color: #e4e4e7;
-            color: #333;
+        .nav-links a:hover {
+            text-decoration: underline;
         }
-        .auth-nav a:hover { opacity: 0.9; }
+        .btn-login {
+            background-color: #0066cc !important;
+            color: white !important;
+            padding: 6px 14px;
+            border-radius: 4px;
+        }
         button {
             background-color: #0066cc;
             color: white;
@@ -77,9 +83,10 @@ HTML_PAGE = """<!DOCTYPE html>
                 <h1>Video SEO AI</h1>
                 <p>Welcome, Guest</p>
             </div>
-            <div class="auth-nav">
-                <a href="/history" class="secondary">History</a>
-                <a href="/login">Login</a>
+            <div class="nav-links">
+                <a href="/history">Scan History</a>
+                <a href="/logout">Logout</a>
+                <a href="/login" class="btn-login">Login</a>
             </div>
         </header>
 
@@ -147,15 +154,12 @@ def scan():
         return "No selected file", 400
     
     filename = file.filename
-    
-    # Real AI Analysis via Gemini API
-    ai_title = f"Optimized Video: {filename}"
     ai_description = "Comprehensive AI-generated description optimized for search algorithms, engagement, and audience retention."
-    ai_tags = "video seo, content optimization, AI analysis, digital growth"
     
     try:
+        # Using the correct active model: gemini-2.0-flash
         response_ai = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-2.0-flash',
             contents=f"Generate a catchy YouTube video title, a short SEO description, and 4 comma-separated tags for an uploaded video file named: {filename}"
         )
         if response_ai and response_ai.text:
