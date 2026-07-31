@@ -12,66 +12,16 @@ HTML_PAGE = """<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video SEO AI</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-        .container {
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            max-width: 600px;
-            width: 100%;
-        }
-        .app-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #eaeaea;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-        }
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 600px; width: 100%; }
+        .app-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eaeaea; padding-bottom: 15px; margin-bottom: 20px; }
         .app-title h1 { margin: 0; font-size: 22px; color: #111; }
         .app-title p { margin: 4px 0 0 0; color: #666; font-size: 13px; }
-        .nav-menu {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .nav-menu a {
-            color: #0066cc;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        .nav-menu a:hover {
-            text-decoration: underline;
-        }
-        .btn-login-action {
-            background-color: #0066cc !important;
-            color: white !important;
-            padding: 6px 14px;
-            border-radius: 4px;
-            text-decoration: none;
-        }
-        button.primary-btn {
-            background-color: #0066cc;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        button.primary-btn:hover {
-            background-color: #0055b3;
-        }
+        .nav-menu { display: flex; align-items: center; gap: 12px; }
+        .nav-menu a { color: #0066cc; text-decoration: none; font-size: 14px; font-weight: 500; }
+        .btn-login-action { background-color: #0066cc !important; color: white !important; padding: 6px 14px; border-radius: 4px; text-decoration: none; }
+        button.primary-btn { background-color: #0066cc; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        button.primary-btn:hover { background-color: #0055b3; }
     </style>
 </head>
 <body>
@@ -87,7 +37,6 @@ HTML_PAGE = """<!DOCTYPE html>
                 <a href="/login" class="btn-login-action">Login</a>
             </div>
         </div>
-
         <main>
             <section>
                 <h2>Upload Video for SEO & Compliance Scan</h2>
@@ -103,37 +52,15 @@ HTML_PAGE = """<!DOCTYPE html>
 
 @app.route('/')
 def index():
-    response = make_response(HTML_PAGE)
-    response.headers['Content-Type'] = 'text/html; charset=utf-8'
-    return response
+    return make_response(HTML_PAGE, 200, {'Content-Type': 'text/html; charset=utf-8'})
 
 @app.route('/login')
 def login():
-    login_page = """<!DOCTYPE html>
-    <html lang="en">
-    <head><meta charset="UTF-8"><title>Login - Video SEO AI</title></head>
-    <body style="font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; display: flex; justify-content: center;">
-        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px; width: 100%;">
-            <h2>Login</h2>
-            <p>Authentication feature coming soon.</p>
-            <a href="/" style="color: #0066cc; text-decoration: none;">← Back to Home</a>
-        </div>
-    </body></html>"""
-    return make_response(login_page, 200, {'Content-Type': 'text/html; charset=utf-8'})
+    return make_response("<!DOCTYPE html><html><body><h2>Login</h2><p>Coming soon.</p><a href='/'>Home</a></body></html>", 200, {'Content-Type': 'text/html; charset=utf-8'})
 
 @app.route('/history')
 def history():
-    history_page = """<!DOCTYPE html>
-    <html lang="en">
-    <head><meta charset="UTF-8"><title>Scan History - Video SEO AI</title></head>
-    <body style="font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; display: flex; justify-content: center;">
-        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 500px; width: 100%;">
-            <h2>Scan History</h2>
-            <p>No past scans recorded yet.</p>
-            <a href="/" style="color: #0066cc; text-decoration: none;">← Back to Home</a>
-        </div>
-    </body></html>"""
-    return make_response(history_page, 200, {'Content-Type': 'text/html; charset=utf-8'})
+    return make_response("<!DOCTYPE html><html><body><h2>History</h2><p>No scans yet.</p><a href='/'>Home</a></body></html>", 200, {'Content-Type': 'text/html; charset=utf-8'})
 
 @app.route('/logout')
 def logout():
@@ -144,29 +71,30 @@ def scan():
     if 'video' not in request.files:
         return "No video file uploaded", 400
     file = request.files['video']
-    if file.filename == '':
-        return "No selected file", 400
+    filename = file.filename if file.filename else "uploaded_video.mp4"
     
-    filename = file.filename
     ai_description = ""
-    
     try:
-        # Securely retrieve API key from environment
         api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            return "Configuration Error: GEMINI_API_KEY environment variable is missing.", 500
+        
+        # Initialize client with current SDK syntax
         client = genai.Client(api_key=api_key)
         
-        # Call production stable model gemini-2.0-flash
+        # Use stable Gemini flash model
         response_ai = client.models.generate_content(
             model='gemini-2.0-flash',
             contents=f"Generate a catchy YouTube video title, a short SEO description, and 4 comma-separated tags for an uploaded video file named: {filename}"
         )
-        if response_ai and response_ai.text:
+        
+        if response_ai and hasattr(response_ai, 'text') and response_ai.text:
             ai_description = response_ai.text
         else:
-            ai_description = "Error: Model returned an empty response."
+            ai_description = "Error: The AI model returned an empty response block."
     except Exception as e:
         traceback.print_exc()
-        ai_description = f"API Error Details: {str(e)}"
+        ai_description = f"Runtime Exception Caught: {str(e)}"
 
     result_html = f"""
     <!DOCTYPE html>
@@ -178,7 +106,6 @@ def scan():
             body {{ font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; color: #333; display: flex; justify-content: center; }}
             .container {{ background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 600px; width: 100%; }}
             a {{ color: #0066cc; text-decoration: none; display: inline-block; margin-top: 15px; }}
-            a:hover {{ text-decoration: underline; }}
             .box {{ background: #f9f9fb; padding: 15px; border-radius: 6px; border: 1px solid #eaeaea; margin-top: 10px; white-space: pre-wrap; }}
         </style>
     </head>
@@ -196,9 +123,7 @@ def scan():
     </body>
     </html>
     """
-    response = make_response(result_html)
-    response.headers['Content-Type'] = 'text/html; charset=utf-8'
-    return response
+    return make_response(result_html, 200, {'Content-Type': 'text/html; charset=utf-8'})
 
 @app.route('/manifest.json')
 def serve_manifest():
