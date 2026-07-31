@@ -1,7 +1,11 @@
 import os
 from flask import Flask, request, redirect, url_for, send_from_directory, make_response
+from google import genai
 
 app = Flask(__name__)
+
+# Initialize GenAI client using the environment variable
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 HTML_PAGE = """<!DOCTYPE html>
 <html lang="en">
@@ -29,18 +33,29 @@ HTML_PAGE = """<!DOCTYPE html>
             width: 100%;
         }
         header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             border-bottom: 2px solid #eaeaea;
             padding-bottom: 15px;
             margin-bottom: 20px;
         }
-        nav a {
-            color: #0066cc;
+        .header-title h1 { margin: 0; font-size: 24px; }
+        .header-title p { margin: 5px 0 0 0; color: #666; font-size: 14px; }
+        .auth-nav a {
+            background-color: #0066cc;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
             text-decoration: none;
-            margin-right: 10px;
+            font-size: 14px;
+            margin-left: 5px;
         }
-        nav a:hover {
-            text-decoration: underline;
+        .auth-nav a.secondary {
+            background-color: #e4e4e7;
+            color: #333;
         }
+        .auth-nav a:hover { opacity: 0.9; }
         button {
             background-color: #0066cc;
             color: white;
@@ -58,19 +73,21 @@ HTML_PAGE = """<!DOCTYPE html>
 <body>
     <div class="container">
         <header>
-            <h1>Video SEO & Content Scanner</h1>
-            <p>Welcome, Guest | <a href="/login">Login</a></p>
-            <nav>
-                <a href="/history">Scan History</a> | 
-                <a href="/logout">Logout</a>
-            </nav>
+            <div class="header-title">
+                <h1>Video SEO AI</h1>
+                <p>Welcome, Guest</p>
+            </div>
+            <div class="auth-nav">
+                <a href="/history" class="secondary">History</a>
+                <a href="/login">Login</a>
+            </div>
         </header>
 
         <main>
             <section>
                 <h2>Upload Video for SEO & Compliance Scan</h2>
                 <form action="/scan" method="POST" enctype="multipart/form-data">
-                    <input type="file" name="video" required>
+                    <input type="file" name="video" required style="margin-bottom: 10px; display: block;">
                     <button type="submit">Run Video Scan</button>
                 </form>
             </section>
@@ -87,11 +104,35 @@ def index():
 
 @app.route('/login')
 def login():
-    return "<h3>Login Page</h3><p>Authentication feature coming soon.</p><a href='/'>Back to Home</a>"
+    login_page = """<!DOCTYPE html>
+    <html lang="en">
+    <head><meta charset="UTF-8"><title>Login - Video SEO AI</title>
+    <style>body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; display: flex; justify-content: center; }</style>
+    </head>
+    <body>
+        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px; width: 100%;">
+            <h2>Login</h2>
+            <p>Authentication feature coming soon.</p>
+            <a href="/" style="color: #0066cc; text-decoration: none;">← Back to Home</a>
+        </div>
+    </body></html>"""
+    return make_response(login_page, 200, {'Content-Type': 'text/html; charset=utf-8'})
 
 @app.route('/history')
 def history():
-    return "<h3>Scan History Page (Coming Soon)</h3><a href='/'>Back to Home</a>"
+    history_page = """<!DOCTYPE html>
+    <html lang="en">
+    <head><meta charset="UTF-8"><title>Scan History - Video SEO AI</title>
+    <style>body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; display: flex; justify-content: center; }</style>
+    </head>
+    <body>
+        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 500px; width: 100%;">
+            <h2>Scan History</h2>
+            <p>No past scans recorded yet.</p>
+            <a href="/" style="color: #0066cc; text-decoration: none;">← Back to Home</a>
+        </div>
+    </body></html>"""
+    return make_response(history_page, 200, {'Content-Type': 'text/html; charset=utf-8'})
 
 @app.route('/logout')
 def logout():
@@ -107,8 +148,21 @@ def scan():
     
     filename = file.filename
     
-    # Here is where your scanner.py or GenAI processing hooks up.
-    # For now, it displays a complete analysis layout structure:
+    # Real AI Analysis via Gemini API
+    ai_title = f"Optimized Video: {filename}"
+    ai_description = "Comprehensive AI-generated description optimized for search algorithms, engagement, and audience retention."
+    ai_tags = "video seo, content optimization, AI analysis, digital growth"
+    
+    try:
+        response_ai = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=f"Generate a catchy YouTube video title, a short SEO description, and 4 comma-separated tags for an uploaded video file named: {filename}"
+        )
+        if response_ai and response_ai.text:
+            ai_description = response_ai.text
+    except Exception as e:
+        ai_description = f"Fallback description generated. (Note: {str(e)})"
+
     result_html = f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -118,18 +172,17 @@ def scan():
         <style>
             body {{ font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; color: #333; display: flex; justify-content: center; }}
             .container {{ background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 600px; width: 100%; }}
-            a {{ color: #0066cc; text-decoration: none; }}
+            a {{ color: #0066cc; text-decoration: none; display: inline-block; margin-top: 15px; }}
             a:hover {{ text-decoration: underline; }}
+            .box {{ background: #f9f9fb; padding: 15px; border-radius: 6px; border: 1px solid #eaeaea; margin-top: 10px; white-space: pre-wrap; }}
         </style>
     </head>
     <body>
         <div class="container">
-            <h2>Scan Complete for: {filename}</h2>
+            <h2>Scan Complete: {filename}</h2>
             <hr>
-            <h3>Generated SEO Metadata:</h3>
-            <p><strong>Optimized Title:</strong> Ultimate Guide to Video SEO & Growth (2026)</p>
-            <p><strong>Description:</strong> Learn how to optimize your channel rankings and maintain platform compliance using AI tools.</p>
-            <p><strong>Tags:</strong> video seo, youtube optimization, ai tools, channel growth</p>
+            <h3>Generated AI SEO Metadata:</h3>
+            <div class="box">{ai_description}</div>
             <h3>Compliance Status:</h3>
             <p style="color: green; font-weight: bold;">✔ Passed Guidelines & Safety Checks</p>
             <br>
