@@ -1,4 +1,5 @@
 import os
+import traceback
 from flask import Flask, request, redirect, url_for, send_from_directory, make_response
 from google import genai
 
@@ -62,10 +63,6 @@ HTML_PAGE = """<!DOCTYPE html>
             border-radius: 4px;
             text-decoration: none;
         }
-        .btn-login-action:hover {
-            opacity: 0.9;
-            text-decoration: none !important;
-        }
         button.primary-btn {
             background-color: #0066cc;
             color: white;
@@ -117,10 +114,8 @@ def index():
 def login():
     login_page = """<!DOCTYPE html>
     <html lang="en">
-    <head><meta charset="UTF-8"><title>Login - Video SEO AI</title>
-    <style>body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; display: flex; justify-content: center; }</style>
-    </head>
-    <body>
+    <head><meta charset="UTF-8"><title>Login - Video SEO AI</title></head>
+    <body style="font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; display: flex; justify-content: center;">
         <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px; width: 100%;">
             <h2>Login</h2>
             <p>Authentication feature coming soon.</p>
@@ -133,10 +128,8 @@ def login():
 def history():
     history_page = """<!DOCTYPE html>
     <html lang="en">
-    <head><meta charset="UTF-8"><title>Scan History - Video SEO AI</title>
-    <style>body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; display: flex; justify-content: center; }</style>
-    </head>
-    <body>
+    <head><meta charset="UTF-8"><title>Scan History - Video SEO AI</title></head>
+    <body style="font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; display: flex; justify-content: center;">
         <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 500px; width: 100%;">
             <h2>Scan History</h2>
             <p>No past scans recorded yet.</p>
@@ -158,18 +151,22 @@ def scan():
         return "No selected file", 400
     
     filename = file.filename
-    ai_description = "Comprehensive AI-generated description optimized for search algorithms, engagement, and audience retention."
+    ai_description = ""
     
     try:
-        # Using the standard supported model name
+        # Explicit model call matching SDK structure
         response_ai = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=f"Generate a catchy YouTube video title, a short SEO description, and 4 comma-separated tags for an uploaded video file named: {filename}"
         )
         if response_ai and response_ai.text:
             ai_description = response_ai.text
+        else:
+            ai_description = "Error: Model returned an empty response."
     except Exception as e:
-        ai_description = f"Fallback description generated. (Note: {str(e)})"
+        # Print full traceback to Render logs for exact debugging
+        traceback.print_exc()
+        ai_description = f"API Exception: {str(e)}"
 
     result_html = f"""
     <!DOCTYPE html>
