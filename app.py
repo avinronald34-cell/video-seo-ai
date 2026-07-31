@@ -161,9 +161,9 @@ def scan():
     ai_description = "Comprehensive AI-generated description optimized for search algorithms, engagement, and audience retention."
     
     try:
-        # Updated to the current standard active model: gemini-3.6-flash
+        # Using the standard supported model name
         response_ai = client.models.generate_content(
-            model='gemini-3.6-flash',
+            model='gemini-2.5-flash',
             contents=f"Generate a catchy YouTube video title, a short SEO description, and 4 comma-separated tags for an uploaded video file named: {filename}"
         )
         if response_ai and response_ai.text:
