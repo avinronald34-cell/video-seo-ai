@@ -44,7 +44,7 @@ HTML_PAGE = """<!DOCTYPE html>
         .nav-menu {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
         .nav-menu a {
             color: #0066cc;
@@ -161,9 +161,9 @@ def scan():
     ai_description = "Comprehensive AI-generated description optimized for search algorithms, engagement, and audience retention."
     
     try:
-        # Updated to the current stable model: gemini-2.5-flash
+        # Updated to the current standard active model: gemini-3.6-flash
         response_ai = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.6-flash',
             contents=f"Generate a catchy YouTube video title, a short SEO description, and 4 comma-separated tags for an uploaded video file named: {filename}"
         )
         if response_ai and response_ai.text:
