@@ -1,11 +1,15 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, make_response
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # Render the template and force the browser to read it as HTML
+    rendered_html = render_template('index.html')
+    response = make_response(rendered_html)
+    response.headers['Content-Type'] = 'text/html; charset=utf-8'
+    return response
 
 @app.route('/history')
 def history():
@@ -23,11 +27,6 @@ def scan():
     if file.filename == '':
         return "No selected file", 400
     return f"<h3>Successfully received video: {file.filename}</h3><p>AI SEO & Compliance scan in progress...</p><a href='/'>Upload another</a>"
-
-# Explicit routes to guarantee files are served correctly on Render
-@app.route('/static/style.css')
-def serve_css():
-    return send_from_directory('static', 'style.css', mimetype='text/css')
 
 @app.route('/manifest.json')
 def serve_manifest():
