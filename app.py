@@ -5,9 +5,14 @@ from google import genai
 from google.genai import types
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "video-seo-ai-super-secure-key")
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "video-seo-ai-secure-secret-key")
 
-# Login Page Template with validation message support
+# In-memory user database simulation (email -> password)
+USERS_DB = {
+    "admin@videoseo.ai": "securepassword123"
+}
+
+# Login Page Template
 LOGIN_PAGE = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,9 +23,11 @@ LOGIN_PAGE = """<!DOCTYPE html>
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 40px; display: flex; justify-content: center; align-items: center; height: 100vh; }
         .container { background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px; width: 100%; text-align: center; }
         input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background-color: #0066cc; color: white; border: none; padding: 10px; width: 100%; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button { background-color: #0066cc; color: white; border: none; padding: 10px; width: 100%; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 5px; }
         button:hover { background-color: #0055b3; }
         .error { color: #dc3545; font-size: 13px; margin-bottom: 10px; }
+        .link-text { margin-top: 15px; font-size: 13px; display: block; color: #666; }
+        .link-text a { color: #0066cc; text-decoration: none; }
     </style>
 </head>
 <body>
@@ -34,6 +41,41 @@ LOGIN_PAGE = """<!DOCTYPE html>
             <input type="password" name="password" placeholder="Password" required>
             <button type="submit">Sign In</button>
         </form>
+        <span class="link-text">Don't have an account? <a href="/signup">Sign Up</a></span>
+    </div>
+</body>
+</html>"""
+
+# Sign Up Page Template for New Users
+SIGNUP_PAGE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Video SEO AI</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 40px; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .container { background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px; width: 100%; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #28a745; color: white; border: none; padding: 10px; width: 100%; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 5px; }
+        button:hover { background-color: #218838; }
+        .error { color: #dc3545; font-size: 13px; margin-bottom: 10px; }
+        .link-text { margin-top: 15px; font-size: 13px; display: block; color: #666; }
+        .link-text a { color: #0066cc; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Create Account</h2>
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        <form action="/signup-action" method="POST">
+            <input type="email" name="email" placeholder="Email Address" required>
+            <input type="password" name="password" placeholder="Create Password" required>
+            <button type="submit">Register Account</button>
+        </form>
+        <span class="link-text">Already have an account? <a href="/">Sign In</a></span>
     </div>
 </body>
 </html>"""
@@ -63,7 +105,7 @@ DASHBOARD_PAGE = """<!DOCTYPE html>
         <div class="app-header">
             <div class="app-title">
                 <h1>Video SEO AI</h1>
-                <p>Welcome, Authorized User</p>
+                <p>Welcome, {{ user_email }}</p>
             </div>
             <div class="nav-menu">
                 <a href="/history">Scan History</a>
@@ -89,23 +131,46 @@ def index():
         return redirect(url_for('dashboard'))
     return render_template_string(LOGIN_PAGE, error=None)
 
+@app.route('/signup')
+def signup():
+    if session.get('logged_in'):
+        return redirect(url_for('dashboard'))
+    return render_template_string(SIGNUP_PAGE, error=None)
+
+@app.route('/signup-action', methods=['POST'])
+def signup_action():
+    email = request.form.get('email', '').strip()
+    password = request.form.get('password', '').strip()
+    
+    if not email or not password:
+        return render_template_string(SIGNUP_PAGE, error="All fields are required.")
+    
+    if email in USERS_DB:
+        return render_template_string(SIGNUP_PAGE, error="Email already registered. Please log in.")
+    
+    USERS_DB[email] = password
+    session['logged_in'] = True
+    session['user_email'] = email
+    return redirect(url_for('dashboard'))
+
 @app.route('/login-action', methods=['POST'])
 def login_action():
     email = request.form.get('email', '').strip()
     password = request.form.get('password', '').strip()
     
-    # Define authorized credentials (change or extend as needed)
-    if email == "admin@videoseo.ai" and password == "securepassword123":
+    if email in USERS_DB and USERS_DB[email] == password:
         session['logged_in'] = True
+        session['user_email'] = email
         return redirect(url_for('dashboard'))
     else:
-        return render_template_string(LOGIN_PAGE, error="Invalid credentials. Try admin@videoseo.ai / securepassword123")
+        return render_template_string(LOGIN_PAGE, error="Invalid email or password.")
 
 @app.route('/dashboard')
 def dashboard():
     if not session.get('logged_in'):
         return redirect(url_for('index'))
-    return make_response(DASHBOARD_PAGE, 200, {'Content-Type': 'text/html; charset=utf-8'})
+    user_email = session.get('user_email', 'User')
+    return render_template_string(DASHBOARD_PAGE, user_email=user_email)
 
 @app.route('/history')
 def history():
@@ -139,16 +204,23 @@ def scan():
         
         prompt_text = f"Generate a catchy YouTube video title, a short SEO description, and 4 comma-separated tags for an uploaded video file named: {filename}"
         
-        # Using the active gemini-3.6-flash production model
-        response_ai = client.models.generate_content(
-            model='gemini-3.6-flash',
-            contents=prompt_text
-        )
-        
+        # Robust model fallback handling 503 high-demand errors gracefully
+        response_ai = None
+        for model_name in ['gemini-3.6-flash', 'gemini-3.5-flash']:
+            try:
+                response_ai = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt_text
+                )
+                if response_ai and hasattr(response_ai, 'text') and response_ai.text:
+                    break
+            except Exception:
+                continue
+                
         if response_ai and hasattr(response_ai, 'text') and response_ai.text:
             ai_description = response_ai.text
         else:
-            ai_description = "Error: The AI model returned an empty response block."
+            ai_description = "Error: Models are currently busy. Please click back and try scanning again."
             
     except Exception as e:
         traceback.print_exc()
