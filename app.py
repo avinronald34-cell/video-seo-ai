@@ -1,12 +1,13 @@
 import os
 import traceback
-from flask import Flask, request, redirect, url_for, send_from_directory, make_response
+from flask import Flask, request, redirect, url_for, send_from_directory, make_response, session
 from google import genai
 from google.genai import types
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "video-seo-ai-secure-secret-key")
 
-# Login page template shown first
+# Login Page Template
 LOGIN_PAGE = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,7 +15,7 @@ LOGIN_PAGE = """<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Video SEO AI</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 40px; display: flex; justify-content: center; }
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 40px; display: flex; justify-content: center; align-items: center; height: 100vh; }
         .container { background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px; width: 100%; text-align: center; }
         input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         button { background-color: #0066cc; color: white; border: none; padding: 10px; width: 100%; border-radius: 4px; cursor: pointer; font-size: 16px; }
@@ -24,10 +25,10 @@ LOGIN_PAGE = """<!DOCTYPE html>
 <body>
     <div class="container">
         <h2>Video SEO AI Login</h2>
-        <form action="/dashboard" method="GET">
-            <input type="email" placeholder="Email Address" required>
-            <input type="password" placeholder="Password" required>
-            <button type="submit">Sign In</button>
+        <form action="/login-action" method="POST">
+            <input type="email" name="email" placeholder="Email Address" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Sign In / Continue</button>
         </form>
     </div>
 </body>
@@ -48,7 +49,7 @@ DASHBOARD_PAGE = """<!DOCTYPE html>
         .app-title p { margin: 4px 0 0 0; color: #666; font-size: 13px; }
         .nav-menu { display: flex; align-items: center; gap: 12px; }
         .nav-menu a { color: #0066cc; text-decoration: none; font-size: 14px; font-weight: 500; }
-        .btn-login-action { background-color: #dc3545 !important; color: white !important; padding: 6px 14px; border-radius: 4px; text-decoration: none; }
+        .btn-logout-action { background-color: #dc3545 !important; color: white !important; padding: 6px 14px; border-radius: 4px; text-decoration: none; }
         button.primary-btn { background-color: #0066cc; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; width: 100%; font-size: 16px; }
         button.primary-btn:hover { background-color: #0055b3; }
     </style>
@@ -58,11 +59,11 @@ DASHBOARD_PAGE = """<!DOCTYPE html>
         <div class="app-header">
             <div class="app-title">
                 <h1>Video SEO AI</h1>
-                <p>Welcome, User</p>
+                <p>Welcome, Authenticated User</p>
             </div>
             <div class="nav-menu">
                 <a href="/history">Scan History</a>
-                <a href="/" class="btn-login-action">Logout</a>
+                <a href="/logout" class="btn-logout-action">Logout</a>
             </div>
         </div>
         <main>
@@ -80,19 +81,37 @@ DASHBOARD_PAGE = """<!DOCTYPE html>
 
 @app.route('/')
 def index():
-    # Forces the root link to open the login page first
+    if session.get('logged_in'):
+        return redirect(url_for('dashboard'))
     return make_response(LOGIN_PAGE, 200, {'Content-Type': 'text/html; charset=utf-8'})
+
+@app.route('/login-action', methods=['POST'])
+def login_action():
+    session['logged_in'] = True
+    return redirect(url_for('dashboard'))
 
 @app.route('/dashboard')
 def dashboard():
+    if not session.get('logged_in'):
+        return redirect(url_for('index'))
     return make_response(DASHBOARD_PAGE, 200, {'Content-Type': 'text/html; charset=utf-8'})
 
 @app.route('/history')
 def history():
+    if not session.get('logged_in'):
+        return redirect(url_for('index'))
     return make_response("<!DOCTYPE html><html><body><h2>History</h2><p>No scans yet.</p><a href='/dashboard'>← Dashboard</a></body></html>", 200, {'Content-Type': 'text/html; charset=utf-8'})
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
 
 @app.route('/scan', methods=['POST'])
 def scan():
+    if not session.get('logged_in'):
+        return redirect(url_for('index'))
+        
     file = request.files.get('video')
     filename = file.filename if file and file.filename else "uploaded_video.mp4"
     
@@ -109,8 +128,9 @@ def scan():
         
         prompt_text = f"Generate a catchy YouTube video title, a short SEO description, and 4 comma-separated tags for an uploaded video file named: {filename}"
         
+        # Updated to active model gemini-3.6-flash
         response_ai = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.6-flash',
             contents=prompt_text
         )
         
