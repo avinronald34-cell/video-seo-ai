@@ -138,8 +138,8 @@ def scan():
     
     diagnostic_logs.append("GenAI Client created successfully.")
 
-    # Using the current standard production model identifier
-    models_to_try = ["gemini-3.5-flash", "gemini-2.0-flash"]
+    # Updated fallback list with current active production models
+    models_to_try = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"]
     raw_response_text = None
 
     prompt = (
