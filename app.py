@@ -15,7 +15,6 @@ def get_gemini_client():
     except Exception:
         return None
 
-# Master template including Login option and clean navigation
 MASTER_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -139,8 +138,8 @@ def scan():
     
     diagnostic_logs.append("GenAI Client created successfully.")
 
-    # Using the standard current Gemini developer model string
-    models_to_try = ["gemini-2.0-flash", "gemini-2.5-flash"]
+    # Using the current standard production model identifier
+    models_to_try = ["gemini-3.5-flash", "gemini-2.0-flash"]
     raw_response_text = None
 
     prompt = (
