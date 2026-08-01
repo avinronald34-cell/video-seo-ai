@@ -13,7 +13,10 @@ def index():
 
 @app.route("/dashboard")
 def dashboard():
-    return render_template("dashboard.html")
+    try:
+        return render_template("dashboard.html")
+    except Exception as e:
+        return f"Dashboard Template Error: {str(e)}"
 
 @app.route("/scan", methods=["POST", "GET"])
 def scan():
@@ -29,8 +32,8 @@ def scan():
         client = genai.Client(api_key=api_key)
         diagnostic_logs.append("GenAI Client created successfully.")
 
-        # Using official stable model identifier
-        models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash"]
+        # Use the most stable baseline model identifier
+        models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
         raw_response_text = None
 
         prompt = (
@@ -66,19 +69,18 @@ def scan():
     except Exception as e:
         error_trace = traceback.format_exc()
         diagnostic_logs.append(f"CRITICAL EXCEPTION: {str(e)}")
-        diagnostic_logs.append(error_trace)
         
-        # Fallback raw HTML render so it never fails with a 500 server error page
+        # Fallback inline display so it never crashes to a blank 500 screen
         fallback_html = f"""
         <html>
-        <head><title>Video SEO AI - Error Diagnosis</title></head>
+        <head><title>Video SEO AI - Recovery View</title></head>
         <body style="font-family: Arial; padding: 30px; background: #111; color: #fff;">
-            <h2>Application Error Caught</h2>
-            <p><b>Error:</b> {str(e)}</p>
+            <h2>Runtime Exception Caught</h2>
+            <p style="color: #ff6b6b;"><b>Error Message:</b> {str(e)}</p>
             <h3>Diagnostic Logs:</h3>
-            <pre style="background: #222; padding: 15px; border-radius: 5px; color: #ff6b6b;">{"\\n".join(diagnostic_logs)}</pre>
-            <hr style="border-color: #444;" />
-            <pre style="background: #222; padding: 15px; border-radius: 5px; color: #aaa;">{error_trace}</pre>
+            <pre style="background: #222; padding: 15px; border-radius: 5px; color: #4cd137;">{"\\n".join(diagnostic_logs)}</pre>
+            <h3>Traceback:</h3>
+            <pre style="background: #222; padding: 15px; border-radius: 5px; color: #e84118;">{error_trace}</pre>
         </body>
         </html>
         """
@@ -86,11 +88,17 @@ def scan():
 
 @app.route("/history")
 def history():
-    return render_template("history.html")
+    try:
+        return render_template("history.html")
+    except Exception as e:
+        return f"History Template Error: {str(e)}"
 
 @app.route("/support")
 def support():
-    return render_template("support.html")
+    try:
+        return render_template("support.html")
+    except Exception as e:
+        return f"Support Template Error: {str(e)}"
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
