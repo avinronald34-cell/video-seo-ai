@@ -15,7 +15,7 @@ def get_gemini_client():
     except Exception:
         return None
 
-# Master template including Login option in the navigation bar
+# Master template including Login option and clean navigation
 MASTER_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -139,8 +139,8 @@ def scan():
     
     diagnostic_logs.append("GenAI Client created successfully.")
 
-    # Updated model fallback list supporting standard available identifiers
-    models_to_try = ["gemini-1.5-flash", "gemini-2.0-flash-exp", "gemini-2.5-flash"]
+    # Using the standard current Gemini developer model string
+    models_to_try = ["gemini-2.0-flash", "gemini-2.5-flash"]
     raw_response_text = None
 
     prompt = (
@@ -165,7 +165,7 @@ def scan():
     if raw_response_text:
         audit_report_html = markdown.markdown(raw_response_text)
     else:
-        audit_report_html = "<p style='color:red;'>Error: All fallback models failed. Please verify your GEMINI_API_KEY permissions.</p>"
+        audit_report_html = "<p style='color:red;'>Error: Model request failed. Please check diagnostic logs above.</p>"
 
     return render_template_string(MASTER_TEMPLATE, content_type="scan", audit_report=audit_report_html, logs=diagnostic_logs, filename=filename)
 
