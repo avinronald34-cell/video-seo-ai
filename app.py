@@ -1,13 +1,11 @@
 import os
 import markdown
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for
 from google import genai
-from google.genai import errors
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "super_secret_video_seo_key")
 
-# Initialize Gemini Client safely
 def get_gemini_client():
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
@@ -27,9 +25,7 @@ def dashboard():
 
 @app.route("/scan", methods=["POST", "GET"])
 def scan():
-    # Retrieve API key dynamically from environment
     api_key = os.environ.get("GEMINI_API_KEY")
-    
     diagnostic_logs = []
     diagnostic_logs.append("API Key present." if api_key else "API Key missing.")
     
@@ -44,10 +40,10 @@ def scan():
     
     diagnostic_logs.append("GenAI Client created successfully.")
 
-    models_to_try = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"]
+    # Using current stable models to prevent 500 errors
+    models_to_try = ["gemini-2.5-flash", "gemini-3.6-flash", "gemini-1.5-flash"]
     raw_response_text = None
 
-    # Streamlined, crisp, and high-impact prompt to prevent user fatigue
     prompt = (
         "Perform a short, high-impact YouTube SEO and compliance audit for 'sample_video.mp4'. "
         "Keep the output extremely crisp, scannable, and free of repetitive filler text or excessive explanations. "
@@ -73,10 +69,9 @@ def scan():
             diagnostic_logs.append(f"Model {model_name} error: {str(e)}")
 
     if raw_response_text:
-        # Convert Markdown text into clean HTML for display in the template
         audit_report_html = markdown.markdown(raw_response_text)
     else:
-        audit_report_html = "<p>Error: Model did not return a valid text response.</p>"
+        audit_report_html = "<p>Error: All fallback models failed to return a valid text response. Please check your API key permissions.</p>"
 
     return render_template("scan.html", audit_report=audit_report_html, logs=diagnostic_logs, filename="sample_video.mp4")
 
