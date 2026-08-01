@@ -21,78 +21,93 @@ MASTER_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video SEO AI</title>
+    <title>Video SEO AI Dashboard</title>
     <meta name="theme-color" content="#000000">
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 700px; width: 100%; }
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
+        /* Sidebar layout styling */
+        .sidebar { width: 250px; background-color: #1e1e2d; color: #fff; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; }
+        .sidebar h2 { font-size: 18px; margin-bottom: 25px; color: #00d2ff; }
+        .sidebar a { color: #a2a2bc; text-decoration: none; padding: 10px 15px; border-radius: 6px; margin-bottom: 8px; font-weight: bold; transition: all 0.2s; }
+        .sidebar a:hover, .sidebar a.active { background-color: #2a2a40; color: #fff; }
+        
+        /* Main content area */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; background-color: #f4f4f9; box-sizing: border-box; }
+        .container { background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); max-width: 800px; margin: auto; }
         header { border-bottom: 2px solid #eaeaea; padding-bottom: 15px; margin-bottom: 20px; }
-        nav a { color: #0066cc; text-decoration: none; margin-right: 15px; font-weight: bold; }
-        nav a:hover { text-decoration: underline; }
         button { background-color: #0066cc; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; }
         button:hover { background-color: #0055b3; }
         .report-box { background: #fafafa; padding: 15px; border: 1px solid #ddd; border-radius: 6px; margin-top: 20px; }
         pre { background: #222; color: #4cd137; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+        input[type="email"], input[type="password"], input[type="text"] { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Video SEO AI Dashboard</h1>
-            <p>Welcome! Optimize your videos and run compliance checks instantly.</p>
-            <nav>
-                <a href="/">Home / Upload</a> | 
-                <a href="/login">Login</a> | 
-                <a href="/history">History</a> | 
-                <a href="/support">Support</a>
-            </nav>
-        </header>
+    <!-- Persistent Sidebar Navigation -->
+    <div class="sidebar">
+        <h2>Video SEO AI</h2>
+        <a href="/" class="{{ 'active' if content_type == 'home' else '' }}">Home / Upload</a>
+        <a href="/login" class="{{ 'active' if content_type == 'login' else '' }}">Login</a>
+        <a href="/history" class="{{ 'active' if content_type == 'history' else '' }}">Scan History</a>
+        <a href="/support" class="{{ 'active' if content_type == 'support' else '' }}">Support Center</a>
+    </div>
 
-        <main>
-            {% if content_type == 'scan' %}
-                <section>
-                    <h2>Audit Report for: {{ filename }}</h2>
-                    <div class="report-box">
-                        {{ audit_report|safe }}
-                    </div>
-                    <br>
-                    <a href="/"><button>Run Another Scan</button></a>
-                    
-                    <h3>Diagnostic Logs</h3>
-                    <pre>{{ logs | join('\\n') }}</pre>
-                </section>
-            {% elif content_type == 'login' %}
-                <section>
-                    <h2>Account Login</h2>
-                    <p>Enter your credentials to access your saved video analytics.</p>
-                    <form onsubmit="event.preventDefault(); alert('Logged in successfully!'); window.location.href='/';">
-                        <input type="email" placeholder="Email address" required style="display:block; margin-bottom:10px; padding:8px; width:80%;">
-                        <input type="password" placeholder="Password" required style="display:block; margin-bottom:10px; padding:8px; width:80%;">
-                        <button type="submit">Sign In</button>
-                    </form>
-                </section>
-            {% elif content_type == 'history' %}
-                <section>
-                    <h2>Scan History</h2>
-                    <p>Your previous scan entries will appear here.</p>
-                    <br><a href="/"><button>Back to Upload</button></a>
-                </section>
-            {% elif content_type == 'support' %}
-                <section>
-                    <h2>Support Center</h2>
-                    <p>Need help? Contact your admin or check API configurations.</p>
-                    <br><a href="/"><button>Back to Upload</button></a>
-                </section>
-            {% else %}
-                <section>
-                    <h2>Upload Video for SEO & Compliance Scan</h2>
-                    <form action="/scan" method="POST" enctype="multipart/form-data">
-                        <input type="file" name="video" required style="margin-bottom: 10px; display: block;">
-                        <button type="submit">Run Video Scan</button>
-                    </form>
-                </section>
-            {% endif %}
-        </main>
+    <!-- Main Workspace -->
+    <div class="main-content">
+        <div class="container">
+            <header>
+                <h1>Dashboard Workspace</h1>
+                <p>Optimize your videos and run compliance checks instantly.</p>
+            </header>
+
+            <main>
+                {% if content_type == 'scan' %}
+                    <section>
+                        <h2>Audit Report for: {{ filename }}</h2>
+                        <div class="report-box">
+                            {{ audit_report|safe }}
+                        </div>
+                        <br>
+                        <a href="/"><button>Run Another Scan</button></a>
+                        
+                        <h3>Diagnostic Logs</h3>
+                        <pre>{{ logs | join('\\n') }}</pre>
+                    </section>
+                {% elif content_type == 'login' %}
+                    <section>
+                        <h2>Account Login</h2>
+                        <p>Enter your credentials to access your saved video analytics.</p>
+                        <form onsubmit="event.preventDefault(); alert('Logged in successfully!'); window.location.href='/';">
+                            <label>Email Address</label>
+                            <input type="email" placeholder="name@example.com" required>
+                            <label>Password</label>
+                            <input type="password" placeholder="••••••••" required>
+                            <button type="submit">Sign In</button>
+                        </form>
+                    </section>
+                {% elif content_type == 'history' %}
+                    <section>
+                        <h2>Scan History</h2>
+                        <p>Your previous video audits and optimization runs will appear here.</p>
+                        <br><a href="/"><button>Back to Upload</button></a>
+                    </section>
+                {% elif content_type == 'support' %}
+                    <section>
+                        <h2>Support Center</h2>
+                        <p>Need assistance with API integration or compliance reports? Reach out to support.</p>
+                        <br><a href="/"><button>Back to Upload</button></a>
+                    </section>
+                {% else %}
+                    <section>
+                        <h2>Upload Video for SEO & Compliance Scan</h2>
+                        <form action="/scan" method="POST" enctype="multipart/form-data">
+                            <input type="file" name="video" required style="margin-bottom: 15px; display: block;">
+                            <button type="submit">Run Video Scan</button>
+                        </form>
+                    </section>
+                {% endif %}
+            </main>
+        </div>
     </div>
 </body>
 </html>
@@ -138,8 +153,7 @@ def scan():
     
     diagnostic_logs.append("GenAI Client created successfully.")
 
-    # Utilizing current active frontier models
-    models_to_try = ["gemini-3.6-flash", "gemini-3.5-flash-lite"]
+    models_to_try = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"]
     raw_response_text = None
 
     prompt = (
