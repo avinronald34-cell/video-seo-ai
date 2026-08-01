@@ -89,7 +89,6 @@ DASHBOARD_LAYOUT = """<!DOCTYPE html>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Sidebar styling */
         .sidebar { width: 250px; background-color: #1e1e2f; color: #fff; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; transition: transform 0.3s ease; z-index: 100; position: relative; }
         .sidebar h2 { font-size: 20px; margin-bottom: 30px; color: #00d2ff; }
         .sidebar a { color: #b0b0c3; text-decoration: none; padding: 12px 15px; border-radius: 6px; margin-bottom: 8px; display: block; font-size: 15px; transition: 0.2s; }
@@ -97,37 +96,31 @@ DASHBOARD_LAYOUT = """<!DOCTYPE html>
         .sidebar .logout-link { margin-top: auto; background-color: #dc3545; color: white; text-align: center; }
         .sidebar .logout-link:hover { background-color: #c82333; }
 
-        /* Mobile Collapsed State */
         @media(max-width: 768px) {
             .sidebar { position: fixed; height: 100%; transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
         }
 
-        /* Top Header with Hamburger Toggle */
         .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
         .menu-toggle { background: #1e1e2f; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 18px; display: none; }
         @media(max-width: 768px) { .menu-toggle { display: block; } }
 
-        /* Main content area */
         .main-content { flex: 1; padding: 20px; overflow-y: auto; box-sizing: border-box; }
         .card { background: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-width: 700px; margin: auto; box-sizing: border-box; }
         h1 { margin-top: 0; font-size: 22px; color: #111; }
         .user-info { font-size: 13px; color: #666; margin-bottom: 20px; }
         
-        /* Upload form styling */
         .upload-box { border: 2px dashed #0066cc; padding: 20px; text-align: center; border-radius: 6px; background: #fafafa; margin-bottom: 15px; }
         input[type="file"] { width: 100%; box-sizing: border-box; margin: 10px 0; }
         button.primary-btn { background-color: #0066cc; color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold; }
         button.primary-btn:hover { background-color: #0055b3; }
 
-        /* Loading Spinner Overlay */
         #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; color: white; flex-direction: column; text-align: center; padding: 20px; box-sizing: border-box; }
         .spinner { border: 5px solid #f3f3f3; border-top: 5px solid #00d2ff; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <!-- Sidebar Navigation -->
     <div class="sidebar" id="sidebar">
         <h2>Video SEO AI</h2>
         <a href="/dashboard" class="active">📊 Dashboard</a>
@@ -136,7 +129,6 @@ DASHBOARD_LAYOUT = """<!DOCTYPE html>
         <a href="/logout" class="logout-link">Logout</a>
     </div>
 
-    <!-- Main Content -->
     <div class="main-content">
         <div class="top-bar">
             <button class="menu-toggle" onclick="toggleSidebar()">☰ Menu</button>
@@ -155,7 +147,6 @@ DASHBOARD_LAYOUT = """<!DOCTYPE html>
         </div>
     </div>
 
-    <!-- Loading Screen Overlay -->
     <div id="loading-overlay">
         <div class="spinner"></div>
         <h2>Gemini AI is analyzing your video...</h2>
@@ -415,7 +406,11 @@ def scan():
                 <a href="/dashboard" class="btn-back">← Back to Dashboard</a>
             </div>
         </div>
-        <script>function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }</script>
+        <script>
+            function toggleSidebar() {{
+                document.getElementById('sidebar').classList.toggle('open');
+            }}
+        </script>
     </body>
     </html>
     """
