@@ -41,7 +41,6 @@ def scan():
     filename = "sample_video.mp4"
     
     try:
-        # Check if user uploaded a file through index.html form
         if request.method == "POST" and 'video' in request.files:
             uploaded_file = request.files['video']
             if uploaded_file.filename != '':
@@ -89,23 +88,7 @@ def scan():
         else:
             audit_report_html = "<p>Error: All models failed to generate content. Check logs below.</p>"
 
-        # Check if index.html has a section to render the audit report, otherwise fallback gracefully
-        try:
-            return render_template("index.html", audit_report=audit_report_html, logs=diagnostic_logs, filename=filename)
-        except Exception:
-            # Fallback if index.html doesn't accept audit_report variable yet
-            return render_template_string(f"""
-            <html>
-            <head><title>Scan Results - Video SEO AI</title></head>
-            <body style="font-family: Arial; padding: 30px; background: #f4f4f9; color: #333;">
-                <h1>Scan Results for: {filename}</h1>
-                <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    {audit_report_html}
-                </div>
-                <br><a href="/login">Back to App</a>
-            </body>
-            </html>
-            """)
+        return render_template("index.html", audit_report=audit_report_html, logs=diagnostic_logs, filename=filename)
 
     except Exception as e:
         error_trace = traceback.format_exc()
