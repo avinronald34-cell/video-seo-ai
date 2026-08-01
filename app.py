@@ -17,12 +17,23 @@ def get_gemini_client():
 
 @app.route("/")
 def index():
-    return redirect(url_for("dashboard"))
+    return render_template("landing.html")
+
+@app.route("/landing")
+def landing():
+    return render_template("landing.html")
 
 @app.route("/dashboard")
 def dashboard():
-    # Pointing to landing.html since dashboard.html does not exist in templates
     return render_template("landing.html")
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    return render_template("dashboard.html")
+
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    return render_template("dashboard.html")
 
 @app.route("/scan", methods=["POST", "GET"])
 def scan():
@@ -84,7 +95,7 @@ def support():
 
 @app.route("/logout")
 def logout():
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("index"))
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
