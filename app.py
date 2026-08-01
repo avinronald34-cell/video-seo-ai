@@ -1,7 +1,7 @@
 import os
 import traceback
 import markdown
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template_string, render_template, request, redirect, url_for
 from google import genai
 
 app = Flask(__name__)
@@ -23,12 +23,13 @@ def scan():
         diagnostic_logs.append("API Key present." if api_key else "API Key missing.")
         
         if not api_key:
-            return render_template("scan.html", audit_report="Configuration Error: GEMINI_API_KEY environment variable is missing on Render.", logs=diagnostic_logs, filename="sample_video.mp4")
+            report_text = "Configuration Error: GEMINI_API_KEY environment variable is missing on Render."
+            return render_template("scan.html", audit_report=report_text, logs=diagnostic_logs, filename="sample_video.mp4")
 
         client = genai.Client(api_key=api_key)
         diagnostic_logs.append("GenAI Client created successfully.")
 
-        # Using official stable model identifiers
+        # Using official stable model identifier
         models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash"]
         raw_response_text = None
 
@@ -63,11 +64,25 @@ def scan():
         return render_template("scan.html", audit_report=audit_report_html, logs=diagnostic_logs, filename="sample_video.mp4")
 
     except Exception as e:
-        # This will safely print the traceback right onto your screen instead of a blank 500 page
         error_trace = traceback.format_exc()
         diagnostic_logs.append(f"CRITICAL EXCEPTION: {str(e)}")
         diagnostic_logs.append(error_trace)
-        return render_template("scan.html", audit_report=f"<h3>Application Error Caught:</h3><pre>{str(e)}</pre>", logs=diagnostic_logs, filename="sample_video.mp4")
+        
+        # Fallback raw HTML render so it never fails with a 500 server error page
+        fallback_html = f"""
+        <html>
+        <head><title>Video SEO AI - Error Diagnosis</title></head>
+        <body style="font-family: Arial; padding: 30px; background: #111; color: #fff;">
+            <h2>Application Error Caught</h2>
+            <p><b>Error:</b> {str(e)}</p>
+            <h3>Diagnostic Logs:</h3>
+            <pre style="background: #222; padding: 15px; border-radius: 5px; color: #ff6b6b;">{"\\n".join(diagnostic_logs)}</pre>
+            <hr style="border-color: #444;" />
+            <pre style="background: #222; padding: 15px; border-radius: 5px; color: #aaa;">{error_trace}</pre>
+        </body>
+        </html>
+        """
+        return render_template_string(fallback_html)
 
 @app.route("/history")
 def history():
