@@ -21,7 +21,8 @@ def index():
 
 @app.route("/dashboard")
 def dashboard():
-    return render_template("dashboard.html")
+    # Pointing to landing.html since dashboard.html does not exist in templates
+    return render_template("landing.html")
 
 @app.route("/scan", methods=["POST", "GET"])
 def scan():
