@@ -15,6 +15,11 @@ def index():
 def landing():
     return render_template("landing.html")
 
+@app.route("/dashboard")
+def dashboard():
+    # Fallback to landing or index if dashboard isn't a separate template
+    return render_template("landing.html")
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     return render_template("login.html")
@@ -84,6 +89,14 @@ def scan():
         </html>
         """
         return render_template_string(fallback_html)
+
+@app.route("/history")
+def history():
+    return redirect(url_for("landing"))
+
+@app.route("/support")
+def support():
+    return redirect(url_for("landing"))
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
