@@ -21,29 +21,39 @@ def landing():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    # Route login to the scanner for seamless access
-    return redirect(url_for("scan"))
+    return render_template("index.html")
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
-    # Route signup to the scanner for seamless access
-    return redirect(url_for("scan"))
+    return render_template("index.html")
 
-@app.route("/auth/google")
-def google_auth():
-    # Handles the Google auth link shown at the bottom left of your screenshot
-    return redirect(url_for("scan"))
+@app.route("/logout")
+def logout():
+    return redirect(url_for("landing"))
+
+@app.route("/history")
+def history():
+    return render_template("index.html", audit_report="<p>No past history available yet. Run a scan to see records here.</p>", logs=[], filename="None")
 
 @app.route("/scan", methods=["POST", "GET"])
 def scan():
     diagnostic_logs = []
+    filename = "sample_video.mp4"
+    
     try:
+        # Check if user uploaded a file through index.html form
+        if request.method == "POST" and 'video' in request.files:
+            uploaded_file = request.files['video']
+            if uploaded_file.filename != '':
+                filename = uploaded_file.filename
+                diagnostic_logs.append(f"Received uploaded file: {filename}")
+
         api_key = os.environ.get("GEMINI_API_KEY")
         diagnostic_logs.append("API Key present." if api_key else "API Key missing.")
         
         if not api_key:
             report_text = "Configuration Error: GEMINI_API_KEY environment variable is missing on Render."
-            return render_template("index.html", audit_report=report_text, logs=diagnostic_logs, filename="sample_video.mp4")
+            return render_template("index.html", audit_report=report_text, logs=diagnostic_logs, filename=filename)
 
         client = genai.Client(api_key=api_key)
         diagnostic_logs.append("GenAI Client created successfully.")
@@ -52,7 +62,7 @@ def scan():
         raw_response_text = None
 
         prompt = (
-            "Perform a short, high-impact YouTube SEO and compliance audit for 'sample_video.mp4'. "
+            f"Perform a short, high-impact YouTube SEO and compliance audit for video file '{filename}'. "
             "Keep the output extremely crisp and scannable using Markdown formatting: "
             "1. **SEO Score** (X/100) "
             "2. **Key Fixes Needed** (Bullet points only) "
@@ -79,30 +89,38 @@ def scan():
         else:
             audit_report_html = "<p>Error: All models failed to generate content. Check logs below.</p>"
 
-        return render_template("index.html", audit_report=audit_report_html, logs=diagnostic_logs, filename="sample_video.mp4")
+        # Check if index.html has a section to render the audit report, otherwise fallback gracefully
+        try:
+            return render_template("index.html", audit_report=audit_report_html, logs=diagnostic_logs, filename=filename)
+        except Exception:
+            # Fallback if index.html doesn't accept audit_report variable yet
+            return render_template_string(f"""
+            <html>
+            <head><title>Scan Results - Video SEO AI</title></head>
+            <body style="font-family: Arial; padding: 30px; background: #f4f4f9; color: #333;">
+                <h1>Scan Results for: {filename}</h1>
+                <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    {audit_report_html}
+                </div>
+                <br><a href="/login">Back to App</a>
+            </body>
+            </html>
+            """)
 
     except Exception as e:
         error_trace = traceback.format_exc()
         diagnostic_logs.append(f"CRITICAL EXCEPTION: {str(e)}")
-        fallback_html = f"""
+        return render_template_string(f"""
         <html>
         <head><title>Recovery View</title></head>
         <body style="font-family: Arial; padding: 30px; background: #111; color: #fff;">
             <h2>Runtime Exception Caught</h2>
             <p style="color: #ff6b6b;"><b>Error:</b> {str(e)}</p>
             <pre style="background: #222; padding: 15px; color: #4cd137;">{"\\n".join(diagnostic_logs)}</pre>
+            <pre style="color: #888;">{error_trace}</pre>
         </body>
         </html>
-        """
-        return render_template_string(fallback_html)
-
-@app.route("/history")
-def history():
-    return redirect(url_for("scan"))
-
-@app.route("/support")
-def support():
-    return redirect(url_for("landing"))
+        """)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
