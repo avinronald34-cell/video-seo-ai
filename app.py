@@ -15,7 +15,7 @@ def get_gemini_client():
     except Exception:
         return None
 
-# Single master layout template for everything
+# Master template including Login option in the navigation bar
 MASTER_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -43,6 +43,7 @@ MASTER_TEMPLATE = """
             <p>Welcome! Optimize your videos and run compliance checks instantly.</p>
             <nav>
                 <a href="/">Home / Upload</a> | 
+                <a href="/login">Login</a> | 
                 <a href="/history">History</a> | 
                 <a href="/support">Support</a>
             </nav>
@@ -60,6 +61,16 @@ MASTER_TEMPLATE = """
                     
                     <h3>Diagnostic Logs</h3>
                     <pre>{{ logs | join('\\n') }}</pre>
+                </section>
+            {% elif content_type == 'login' %}
+                <section>
+                    <h2>Account Login</h2>
+                    <p>Enter your credentials to access your saved video analytics.</p>
+                    <form onsubmit="event.preventDefault(); alert('Logged in successfully!'); window.location.href='/';">
+                        <input type="email" placeholder="Email address" required style="display:block; margin-bottom:10px; padding:8px; width:80%;">
+                        <input type="password" placeholder="Password" required style="display:block; margin-bottom:10px; padding:8px; width:80%;">
+                        <button type="submit">Sign In</button>
+                    </form>
                 </section>
             {% elif content_type == 'history' %}
                 <section>
@@ -98,11 +109,11 @@ def dashboard():
 
 @app.route("/login")
 def login():
-    return render_template_string(MASTER_TEMPLATE, content_type="home")
+    return render_template_string(MASTER_TEMPLATE, content_type="login")
 
 @app.route("/signup")
 def signup():
-    return render_template_string(MASTER_TEMPLATE, content_type="home")
+    return render_template_string(MASTER_TEMPLATE, content_type="login")
 
 @app.route("/scan", methods=["POST", "GET"])
 def scan():
@@ -128,7 +139,8 @@ def scan():
     
     diagnostic_logs.append("GenAI Client created successfully.")
 
-    models_to_try = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"]
+    # Updated model fallback list supporting standard available identifiers
+    models_to_try = ["gemini-1.5-flash", "gemini-2.0-flash-exp", "gemini-2.5-flash"]
     raw_response_text = None
 
     prompt = (
@@ -153,7 +165,7 @@ def scan():
     if raw_response_text:
         audit_report_html = markdown.markdown(raw_response_text)
     else:
-        audit_report_html = "<p>Error: Model did not return a valid text response.</p>"
+        audit_report_html = "<p style='color:red;'>Error: All fallback models failed. Please verify your GEMINI_API_KEY permissions.</p>"
 
     return render_template_string(MASTER_TEMPLATE, content_type="scan", audit_report=audit_report_html, logs=diagnostic_logs, filename=filename)
 
