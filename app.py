@@ -7,6 +7,11 @@ from google import genai
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "video-seo-ai-secure-secret-key-2026")
 
+# Configure session cookie settings for reliable cross-device mobile/desktop access
+app.config['SESSION_COOKIE_SECURE'] = True  # Required for HTTPS on Render
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
 # In-memory user database simulation (email -> password)
 USERS_DB = {
     "admin@videoseo.ai": "securepassword123"
@@ -179,10 +184,14 @@ def logout():
     session.clear()
     return redirect(url_for('index'))
 
-@app.route('/scan', methods=['POST'])
+@app.route('/scan', methods=['GET', 'POST'])
 def scan():
     if not session.get('logged_in'):
         return redirect(url_for('index'))
+        
+    # If someone tries to open /scan directly via GET instead of form submission, redirect them safely back
+    if request.method == 'GET':
+        return redirect(url_for('dashboard'))
         
     file = request.files.get('video')
     filename = file.filename if file and file.filename else "uploaded_video.mp4"
@@ -200,7 +209,6 @@ def scan():
         client = genai.Client(api_key=api_key)
         diagnostic_logs.append("GenAI Client created successfully.")
         
-        # Comprehensive structured prompt for YouTube SEO, compliance, and score metrics
         prompt_text = (
             f"Analyze the video file named '{filename}' for a comprehensive YouTube SEO and compliance check. "
             f"Provide the output strictly using the following headings and structure:\n\n"
