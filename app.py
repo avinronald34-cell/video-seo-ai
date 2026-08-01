@@ -9,14 +9,19 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "super_secret_video_seo_key"
 
 @app.route("/")
 def index():
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("landing"))
 
-@app.route("/dashboard")
-def dashboard():
-    try:
-        return render_template("dashboard.html")
-    except Exception as e:
-        return f"Dashboard Template Error: {str(e)}"
+@app.route("/landing")
+def landing():
+    return render_template("landing.html")
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    return render_template("login.html")
+
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    return render_template("signup.html")
 
 @app.route("/scan", methods=["POST", "GET"])
 def scan():
@@ -27,12 +32,11 @@ def scan():
         
         if not api_key:
             report_text = "Configuration Error: GEMINI_API_KEY environment variable is missing on Render."
-            return render_template("scan.html", audit_report=report_text, logs=diagnostic_logs, filename="sample_video.mp4")
+            return render_template("index.html", audit_report=report_text, logs=diagnostic_logs, filename="sample_video.mp4")
 
         client = genai.Client(api_key=api_key)
         diagnostic_logs.append("GenAI Client created successfully.")
 
-        # Use the most stable baseline model identifier
         models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
         raw_response_text = None
 
@@ -64,41 +68,22 @@ def scan():
         else:
             audit_report_html = "<p>Error: All models failed to generate content. Check logs below.</p>"
 
-        return render_template("scan.html", audit_report=audit_report_html, logs=diagnostic_logs, filename="sample_video.mp4")
+        return render_template("index.html", audit_report=audit_report_html, logs=diagnostic_logs, filename="sample_video.mp4")
 
     except Exception as e:
         error_trace = traceback.format_exc()
         diagnostic_logs.append(f"CRITICAL EXCEPTION: {str(e)}")
-        
-        # Fallback inline display so it never crashes to a blank 500 screen
         fallback_html = f"""
         <html>
-        <head><title>Video SEO AI - Recovery View</title></head>
+        <head><title>Recovery View</title></head>
         <body style="font-family: Arial; padding: 30px; background: #111; color: #fff;">
             <h2>Runtime Exception Caught</h2>
-            <p style="color: #ff6b6b;"><b>Error Message:</b> {str(e)}</p>
-            <h3>Diagnostic Logs:</h3>
-            <pre style="background: #222; padding: 15px; border-radius: 5px; color: #4cd137;">{"\\n".join(diagnostic_logs)}</pre>
-            <h3>Traceback:</h3>
-            <pre style="background: #222; padding: 15px; border-radius: 5px; color: #e84118;">{error_trace}</pre>
+            <p style="color: #ff6b6b;"><b>Error:</b> {str(e)}</p>
+            <pre style="background: #222; padding: 15px; color: #4cd137;">{"\\n".join(diagnostic_logs)}</pre>
         </body>
         </html>
         """
         return render_template_string(fallback_html)
-
-@app.route("/history")
-def history():
-    try:
-        return render_template("history.html")
-    except Exception as e:
-        return f"History Template Error: {str(e)}"
-
-@app.route("/support")
-def support():
-    try:
-        return render_template("support.html")
-    except Exception as e:
-        return f"Support Template Error: {str(e)}"
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
