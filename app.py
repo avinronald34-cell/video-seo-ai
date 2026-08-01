@@ -9,24 +9,30 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "super_secret_video_seo_key"
 
 @app.route("/")
 def index():
-    return redirect(url_for("landing"))
+    return render_template("landing.html")
+
+@app.route("/dashboard")
+def dashboard():
+    return render_template("landing.html")
 
 @app.route("/landing")
 def landing():
     return render_template("landing.html")
 
-@app.route("/dashboard")
-def dashboard():
-    # Fallback to landing or index if dashboard isn't a separate template
-    return render_template("landing.html")
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    return render_template("login.html")
+    # Route login to the scanner for seamless access
+    return redirect(url_for("scan"))
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
-    return render_template("signup.html")
+    # Route signup to the scanner for seamless access
+    return redirect(url_for("scan"))
+
+@app.route("/auth/google")
+def google_auth():
+    # Handles the Google auth link shown at the bottom left of your screenshot
+    return redirect(url_for("scan"))
 
 @app.route("/scan", methods=["POST", "GET"])
 def scan():
@@ -92,7 +98,7 @@ def scan():
 
 @app.route("/history")
 def history():
-    return redirect(url_for("landing"))
+    return redirect(url_for("scan"))
 
 @app.route("/support")
 def support():
