@@ -2,6 +2,7 @@ import os
 import traceback
 from flask import Flask, request, redirect, url_for, send_from_directory, make_response, session, render_template_string
 from google import genai
+import markdown
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "video-seo-ai-secure-secret-key-2026")
@@ -347,13 +348,13 @@ def scan():
                 continue
                 
         if response_ai and hasattr(response_ai, 'text') and response_ai.text:
-            ai_description = response_ai.text
+            ai_description = markdown.markdown(response_ai.text)
         else:
-            ai_description = "Error: Model did not return a valid text response."
+            ai_description = "<p>Error: Model did not return a valid text response.</p>"
             
     except Exception as e:
         traceback.print_exc()
-        ai_description = f"Runtime Exception: {str(e)}"
+        ai_description = f"<p>Runtime Exception: {str(e)}</p>"
 
     logs_str = "<br>".join(diagnostic_logs)
     
@@ -377,7 +378,14 @@ def scan():
             @media(max-width: 768px) {{ .menu-toggle {{ display: block; }} }}
             .main-content {{ flex: 1; padding: 20px; overflow-y: auto; box-sizing: border-box; }}
             .card {{ background: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-width: 700px; margin: auto; box-sizing: border-box; }}
-            .result-box {{ background: #f9f9fb; padding: 15px; border-radius: 6px; border: 1px solid #eaeaea; margin-top: 15px; white-space: pre-wrap; font-size: 13px; line-height: 1.5; }}
+            
+            /* Clean Report Typography & Layout */
+            .result-box {{ background: #f9f9fb; padding: 20px; border-radius: 6px; border: 1px solid #eaeaea; margin-top: 15px; font-size: 14px; line-height: 1.6; color: #222; }}
+            .result-box h3, .result-box h2, .result-box h1 {{ color: #0066cc; margin-top: 20px; margin-bottom: 10px; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 5px; }}
+            .result-box ul {{ padding-left: 20px; margin-top: 5px; margin-bottom: 15px; }}
+            .result-box li {{ margin-bottom: 6px; }}
+            .result-box p {{ margin-bottom: 10px; }}
+            
             .logs {{ background: #1e1e1e; color: #00ff66; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11px; margin-top: 15px; overflow-x: auto; }}
             .btn-back {{ background-color: #0066cc; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; display: inline-block; margin-top: 20px; font-weight: bold; }}
             .btn-back:hover {{ background-color: #0055b3; }}
