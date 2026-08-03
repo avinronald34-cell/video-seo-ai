@@ -80,14 +80,35 @@ def logout():
     session.clear()
     return redirect(url_for('index'))
 
-# Example Gemini Video SEO Audit endpoint (if your app uses it)
 @app.route('/analyze', methods=['POST'])
 def analyze_video():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     
-    # Add your video audit / Gemini logic here if needed
-    return jsonify({'message': 'Analysis placeholder working!'})
+    topic = request.form.get('video_topic')
+    if not topic:
+        return "Please provide a video topic or keywords.", 400
+
+    if not gemini_client:
+        return "Gemini API key is not configured on the server.", 500
+
+    try:
+        prompt = (
+            f"Act as an expert YouTube SEO strategist. Generate an optimized package for a video about: '{topic}'. "
+            f"Provide 3 catchy click-worthy titles, a detailed SEO-friendly description with timestamps placeholder, "
+            f"and 10 high-ranking comma-separated tags."
+        )
+        
+        response = gemini_client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt
+        )
+        
+        analysis_result = response.text
+        return render_template('result.html', topic=topic, analysis=analysis_result)
+        
+    except Exception as e:
+        return f"Error generating SEO analysis: {str(e)}", 500
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5002))
