@@ -1,5 +1,5 @@
 import os
-import markdown
+import time
 from flask import Flask, request, render_template_string, session, redirect, url_for
 from authlib.integrations.flask_client import OAuth
 from google import genai
@@ -184,10 +184,23 @@ You are an expert AI Copyright, YouTube Compliance, and SEO Auditor. Analyze the
 12. Final Verdict (Overall Score, Safety Status, Confidence Level)
 """
         
-        client_res = client.models.generate_content(
-            model="gemini-3.6-flash", 
-            contents=prompt_text
-        )
+        # Retry loop for handling temporary 503 high demand traffic spikes
+        max_retries = 3
+        client_res = None
+        for attempt in range(max_retries):
+            try:
+                diagnostic_logs.append(f"Attempt {attempt + 1} contacting Gemini API...")
+                client_res = client.models.generate_content(
+                    model="gemini-3.6-flash", 
+                    contents=prompt_text
+                )
+                break
+            except Exception as inner_e:
+                if "503" in str(inner_e) and attempt < max_retries - 1:
+                    diagnostic_logs.append(f"Encountered high demand (503). Retrying in {2 ** attempt} seconds...")
+                    time.sleep(2 ** attempt)
+                else:
+                    raise inner_e
         
         audit_report_text = client_res.text if client_res and client_res.text else "No response generated from AI."
         diagnostic_logs.append("Successfully generated comprehensive 12-point audit report via Gemini.")
