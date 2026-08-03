@@ -10,7 +10,7 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "super_secret_video_seo_key"
 # Required for Authlib behind proxy / cloud hosting environments like Render
 os.environ['AUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-# Initialize Authlib OAuth
+# Initialize Authlib OAuth with explicit environment variables
 oauth = OAuth(app)
 google = oauth.register(
     name='google',
@@ -148,9 +148,11 @@ def auth_google_callback():
 def scan():
     if not session.get('user'):
         return redirect(url_for('index'))
+    
     api_key = os.environ.get("GEMINI_API_KEY")
     diagnostic_logs = ["API Key present." if api_key else "API Key missing."]
     filename = "sample_video.mp4"
+    
     if 'video' in request.files:
         uploaded_file = request.files['video']
         if uploaded_file.filename != '':
@@ -161,9 +163,21 @@ def scan():
         error_html = "<p style='color:red;'>Configuration Error: GEMINI_API_KEY missing.</p>"
         return render_template_string(MASTER_TEMPLATE, content_type="scan", audit_report=error_html, logs=diagnostic_logs, filename=filename)
 
-    client = get_gemini_client()
-    client_res = client.models.generate_content(model="gemini-2.0-flash", contents=f"Audit YouTube video file named {filename}")
-    audit_report_html = markdown.markdown(client_res.text) if client_res and client_res.text else "Error generating report"
+    try:
+        client = get_gemini_client()
+        prompt_text = f"Provide a complete YouTube video SEO audit, optimized tags, metadata title suggestions, and a compliance review for a video titled or named: {filename}"
+        
+        client_res = client.models.generate_content(
+            model="gemini-2.0-flash", 
+            contents=prompt_text
+        )
+        
+        audit_report_html = markdown.markdown(client_res.text) if client_res and client_res.text else "<p>No response generated from AI.</p>"
+        diagnostic_logs.append("Successfully generated audit report via Gemini.")
+    except Exception as e:
+        audit_report_html = f"<p style='color:red;'>AI Generation Error: {str(e)}</p>"
+        diagnostic_logs.append(f"Error calling Gemini API: {str(e)}")
+
     return render_template_string(MASTER_TEMPLATE, content_type="scan", audit_report=audit_report_html, logs=diagnostic_logs, filename=filename)
 
 @app.route("/history")
