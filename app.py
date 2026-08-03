@@ -54,10 +54,7 @@ MASTER_TEMPLATE = """
         button:hover { background-color: #0055b3; }
         .google-btn { background-color: #ffffff; color: #444; border: 1px solid #ccc; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; text-decoration: none; width: 100%; box-sizing: border-box; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .google-btn:hover { background-color: #f8f8f8; }
-        .report-box { background: #fafafa; padding: 20px; border: 1px solid #ddd; border-radius: 6px; margin-top: 20px; line-height: 1.6; }
-        .report-box table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; }
-        .report-box th, .report-box td { border: 1px solid #ddd; padding: 8px 12px; font-size: 14px; text-align: left; }
-        .report-box th { background-color: #eee; }
+        .report-box { background: #fafafa; padding: 20px; border: 1px solid #ddd; border-radius: 6px; margin-top: 20px; line-height: 1.6; white-space: pre-wrap; font-family: inherit; }
         pre { background: #222; color: #4cd137; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
     </style>
 </head>
@@ -97,7 +94,7 @@ MASTER_TEMPLATE = """
                 {% if content_type == 'scan' %}
                     <section>
                         <h2>Comprehensive Compliance & SEO Report: {{ filename }}</h2>
-                        <div class="report-box">{{ audit_report|safe }}</div>
+                        <div class="report-box">{{ audit_report }}</div>
                         <br><a href="/"><button style="width: auto;">Run Another Scan</button></a>
                         <h3 style="margin-top: 20px;">Diagnostic Logs</h3>
                         <pre>{{ logs | join('\n') }}</pre>
@@ -164,18 +161,17 @@ def scan():
             diagnostic_logs.append(f"Received file: {filename}")
 
     if not api_key:
-        error_html = "<p style='color:red;'>Configuration Error: GEMINI_API_KEY missing.</p>"
-        return render_template_string(MASTER_TEMPLATE, content_type="scan", audit_report=error_html, logs=diagnostic_logs, filename=filename)
+        error_text = "Configuration Error: GEMINI_API_KEY missing."
+        return render_template_string(MASTER_TEMPLATE, content_type="scan", audit_report=error_text, logs=diagnostic_logs, filename=filename)
 
     try:
         client = get_gemini_client()
         
-        # Comprehensive system prompt instructing the model to output the 12 specific structured blocks
         prompt_text = f"""
-You are an expert AI Copyright, YouTube Compliance, and SEO Auditor. Analyze the file context named '{filename}' and output a professional, complete report in markdown format following these exact sections with emojis and markdown tables where appropriate:
+You are an expert AI Copyright, YouTube Compliance, and SEO Auditor. Analyze the file context named '{filename}' and output a professional, complete report following these exact sections with emojis where appropriate:
 
 1. Executive Summary (Overall Upload Safety Score 0-100, Copyright Risk, Content ID Risk, Community Guidelines Risk, Reused Content Risk, Monetization Risk, AI Content Detection, Final Recommendation)
-2. Scene Timeline Analysis (Timestamp, Description, Original/Third-party, Copyright Risk, Trademark Detection, Recommendation in a markdown table)
+2. Scene Timeline Analysis (Timestamp, Description, Original/Third-party, Copyright Risk, Trademark Detection, Recommendation)
 3. Audio Analysis (Background Music, Speech, AI Voice Detection, Music Similarity, Estimated Content ID Risk)
 4. Visual Analysis (Logos, Brands, Celebrities, Faces, Children, TV Shows, Movies, Anime, Sports, Gaming, Memes, Artwork, Screenshots, Text Overlays)
 5. Copyright Assessment (Claim Probability %, Strike Probability %, Manual Review Probability %, Confidence Score + disclaimer note that these are AI estimates, not guarantees)
@@ -193,13 +189,13 @@ You are an expert AI Copyright, YouTube Compliance, and SEO Auditor. Analyze the
             contents=prompt_text
         )
         
-        audit_report_html = markdown.markdown(client_res.text, extensions=['tables']) if client_res and client_res.text else "<p>No response generated from AI.</p>"
+        audit_report_text = client_res.text if client_res and client_res.text else "No response generated from AI."
         diagnostic_logs.append("Successfully generated comprehensive 12-point audit report via Gemini.")
     except Exception as e:
-        audit_report_html = f"<p style='color:red;'>AI Generation Error: {str(e)}</p>"
+        audit_report_text = f"AI Generation Error: {str(e)}"
         diagnostic_logs.append(f"Error calling Gemini API: {str(e)}")
 
-    return render_template_string(MASTER_TEMPLATE, content_type="scan", audit_report=audit_report_html, logs=diagnostic_logs, filename=filename)
+    return render_template_string(MASTER_TEMPLATE, content_type="scan", audit_report=audit_report_text, logs=diagnostic_logs, filename=filename)
 
 @app.route("/history")
 def history():
