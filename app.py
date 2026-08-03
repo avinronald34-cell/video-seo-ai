@@ -184,7 +184,7 @@ You are an expert AI Copyright, YouTube Compliance, and SEO Auditor. Analyze the
 12. Final Verdict (Overall Score, Safety Status, Confidence Level)
 """
         
-        # Hardcoding active frontier standard model: gemini-3.5-flash
+        # Strictly enforce stable production model gemini-3.5-flash
         max_retries = 3
         client_res = None
         for attempt in range(max_retries):
