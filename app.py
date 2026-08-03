@@ -184,14 +184,14 @@ You are an expert AI Copyright, YouTube Compliance, and SEO Auditor. Analyze the
 12. Final Verdict (Overall Score, Safety Status, Confidence Level)
 """
         
-        # Using the current active gemini-3.6-flash model
+        # Updated to active production model: gemini-2.5-flash
         max_retries = 3
         client_res = None
         for attempt in range(max_retries):
             try:
-                diagnostic_logs.append(f"Attempt {attempt + 1} using gemini-3.6-flash...")
+                diagnostic_logs.append(f"Attempt {attempt + 1} using gemini-2.5-flash...")
                 client_res = client.models.generate_content(
-                    model="gemini-3.6-flash", 
+                    model="gemini-2.5-flash", 
                     contents=prompt_text
                 )
                 break
