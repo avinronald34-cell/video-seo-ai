@@ -80,23 +80,20 @@ def logout():
     session.clear()
     return redirect(url_for('index'))
 
-@app.route('/analyze', methods=['POST'])
+@app.route('/analyze', methods=['POST', 'GET'])
 def analyze_video():
     if 'user' not in session:
-        return jsonify({'error': 'Unauthorized'}), 401
+        return redirect(url_for('index'))
     
-    topic = request.form.get('video_topic') or request.form.get('topic')
-    if not topic:
-        return jsonify({'error': 'Please provide a video topic.'}), 400
+    topic = request.form.get('video_topic') or request.args.get('topic', 'YouTube Automation')
 
     if not gemini_client:
-        return jsonify({'error': 'Gemini API key is not configured.'}), 500
+        return render_template('result.html', topic=topic, analysis="Error: Gemini API key is not configured on Render environment variables.")
 
     try:
         prompt = (
             f"Act as an expert YouTube SEO strategist. Generate an optimized package for a video about: '{topic}'. "
-            f"Provide 3 catchy click-worthy titles, a detailed SEO-friendly description, "
-            f"and 10 high-ranking comma-separated tags."
+            f"Provide 3 catchy titles, a detailed description, and 10 tags."
         )
         
         response = gemini_client.models.generate_content(
@@ -104,11 +101,11 @@ def analyze_video():
             contents=prompt
         )
         
-        analysis_result = response.text
+        analysis_result = response.text if response else "No response generated."
         return render_template('result.html', topic=topic, analysis=analysis_result)
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return render_template('result.html', topic=topic, analysis=f"Generation error: {str(e)}")
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5002))
