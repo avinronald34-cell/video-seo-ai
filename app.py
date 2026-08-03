@@ -21,10 +21,17 @@ MASTER_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video SEO AI Dashboard</title>
+    <title>Video SEO AI Portal</title>
     <meta name="theme-color" content="#000000">
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Auth Screen Styling */
+        .auth-wrapper { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; background-color: #1e1e2d; }
+        .auth-container { background: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; }
+        .auth-container h2 { margin-bottom: 10px; color: #1e1e2d; }
+        
+        /* Dashboard Layout Styling */
         .sidebar { width: 250px; background-color: #1e1e2d; color: #fff; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; justify-content: space-between; }
         .sidebar-top h2 { font-size: 18px; margin-bottom: 25px; color: #00d2ff; }
         .sidebar-top a { display: block; color: #a2a2bc; text-decoration: none; padding: 10px 15px; border-radius: 6px; margin-bottom: 8px; font-weight: bold; transition: all 0.2s; }
@@ -32,18 +39,49 @@ MASTER_TEMPLATE = """
         .logout-btn { background-color: #e74c3c; color: white; text-align: center; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; display: block; }
         .logout-btn:hover { background-color: #c0392b; }
         
-        .main-content { flex: 1; padding: 30px; overflow-y: auto; background-color: #f4f4f9; box-sizing: border-box; }
-        .container { background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); max-width: 800px; margin: auto; }
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; background-color: #f4f4f9; box-sizing: border-box; display: flex; justify-content: center; align-items: flex-start; }
+        .container { background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); width: 100%; max-width: 800px; box-sizing: border-box; }
+        
         header { border-bottom: 2px solid #eaeaea; padding-bottom: 15px; margin-bottom: 20px; }
-        button { background-color: #0066cc; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        button { background-color: #0066cc; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; font-weight: bold; }
         button:hover { background-color: #0055b3; }
+        
+        .google-btn { background-color: #ffffff; color: #444; border: 1px solid #ccc; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; text-decoration: none; width: 100%; box-sizing: border-box; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .google-btn:hover { background-color: #f8f8f8; }
+        
+        .divider { margin: 20px 0; border-bottom: 1px solid #ddd; position: relative; }
+        .divider span { background: #fff; padding: 0 10px; color: #777; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 12px; }
+        
+        input[type="text"], input[type="tel"] { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         .report-box { background: #fafafa; padding: 15px; border: 1px solid #ddd; border-radius: 6px; margin-top: 20px; }
         pre { background: #222; color: #4cd137; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
-        .google-btn { background-color: #ffffff; color: #444; border: 1px solid #ddd; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; text-decoration: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .google-btn:hover { background-color: #f8f8f8; }
     </style>
 </head>
 <body>
+    {% if not session.get('user') %}
+    <!-- Locked Landing Page / Login & Signup Screen -->
+    <div class="auth-wrapper">
+        <div class="auth-container">
+            <h2>Video SEO AI</h2>
+            <p style="color: #666; font-size: 14px; margin-bottom: 25px;">Sign in or create your account to proceed</p>
+            
+            <!-- Google Sign-In Option -->
+            <a href="/auth/google" class="google-btn">
+                <svg width="18" height="18" viewBox="0 0 18 18" style="margin-right: 10px;"><path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.12-.85 2.08-1.81 2.72v2.26h2.92c1.71-1.57 2.69-3.88 2.69-6.63z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.71H.96v2.33C2.45 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.97 10.71c-.18-.54-.28-1.12-.28-1.71s.1-1.17.28-1.71V4.96H.96C.35 6.18 0 7.55 0 9s.35 2.82.96 4.04l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.47.89 11.43 0 9 0 5.48 0 2.45 2.02.96 4.96l3.01 2.33c.71-2.13 2.69-3.71 5.03-3.71z"/></svg>
+                Sign up / Sign in with Google
+            </a>
+
+            <div class="divider"><span>OR</span></div>
+
+            <!-- Phone Number with OTP Form -->
+            <form action="/auth/phone" method="POST">
+                <input type="tel" name="phone" placeholder="Mobile Number (e.g., +91...)" required>
+                <button type="submit">Continue with Phone OTP</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <!-- Authenticated App View with Sidebar -->
     <div class="sidebar">
         <div class="sidebar-top">
             <h2>Video SEO AI</h2>
@@ -51,33 +89,20 @@ MASTER_TEMPLATE = """
             <a href="/history" class="{{ 'active' if content_type == 'history' else '' }}">Scan History</a>
             <a href="/support" class="{{ 'active' if content_type == 'support' else '' }}">Support</a>
         </div>
-        {% if session.get('user') %}
         <div>
             <a href="/logout" class="logout-btn">Logout</a>
         </div>
-        {% endif %}
     </div>
 
     <div class="main-content">
         <div class="container">
             <header>
                 <h1>Video SEO & Compliance Scanner</h1>
-                {% if session.get('user') %}
-                    <p style="color: #666; font-size: 14px; margin-top: 5px;">Logged in as: <b>{{ session.get('user') }}</b></p>
-                {% endif %}
+                <p style="color: #666; font-size: 14px; margin-top: 5px;">Logged in as: <b>{{ session.get('user') }}</b></p>
             </header>
 
             <main>
-                {% if not session.get('user') %}
-                    <section style="text-align: center; padding: 40px 0;">
-                        <h2>Authentication Required</h2>
-                        <p style="color: #666; margin-bottom: 25px;">Please sign in with your Google account to access the video optimization dashboard.</p>
-                        <a href="/login" class="google-btn">
-                            <svg width="18" height="18" viewBox="0 0 18 18" style="margin-right: 10px;"><path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.12-.85 2.08-1.81 2.72v2.26h2.92c1.71-1.57 2.69-3.88 2.69-6.63z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.71H.96v2.33C2.45 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.97 10.71c-.18-.54-.28-1.12-.28-1.71s.1-1.17.28-1.71V4.96H.96C.35 6.18 0 7.55 0 9s.35 2.82.96 4.04l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.47.89 11.43 0 9 0 5.48 0 2.45 2.02.96 4.96l3.01 2.33c.71-2.13 2.69-3.71 5.03-3.71z"/></svg>
-                            Sign in with Google
-                        </a>
-                    </section>
-                {% elif content_type == 'scan' %}
+                {% if content_type == 'scan' %}
                     <section>
                         <h2>Audit Report for: {{ filename }}</h2>
                         <div class="report-box">
@@ -92,13 +117,13 @@ MASTER_TEMPLATE = """
                 {% elif content_type == 'history' %}
                     <section>
                         <h2>Scan History</h2>
-                        <p>Your previous video optimization logs will appear here.</p>
+                        <p>Your previous video optimization runs will appear here.</p>
                         <br><a href="/"><button>Back to Dashboard</button></a>
                     </section>
                 {% elif content_type == 'support' %}
                     <section>
                         <h2>Support Center</h2>
-                        <p>For assistance with API limits or audit configuration, reach out to support.</p>
+                        <p>Need assistance with API limitations or audit configuration? Reach out to support.</p>
                         <br><a href="/"><button>Back to Dashboard</button></a>
                     </section>
                 {% else %}
@@ -115,27 +140,27 @@ MASTER_TEMPLATE = """
             </main>
         </div>
     </div>
+    {% endif %}
 </body>
 </html>
 """
 
 @app.route("/")
 def index():
-    if not session.get('user'):
-        return render_template_string(MASTER_TEMPLATE, content_type="home")
     return render_template_string(MASTER_TEMPLATE, content_type="home")
 
-@app.route("/dashboard")
-def dashboard():
-    return redirect(url_for('index'))
-
-@app.route("/login")
-def login():
-    # Simulate a successful Google OAuth callback login session
+@app.route("/auth/google")
+def auth_google():
     session['user'] = "creator@videoseo.ai"
     return redirect(url_for('index'))
 
-@app.route("/scan", methods=["POST", "GET"])
+@app.route("/auth/phone", methods=["POST"])
+def auth_phone():
+    phone = request.form.get('phone', 'MobileUser')
+    session['user'] = f"phone_{phone}"
+    return redirect(url_for('index'))
+
+@app.route("/scan", methods=["POST"])
 def scan():
     if not session.get('user'):
         return redirect(url_for('index'))
@@ -145,7 +170,7 @@ def scan():
     diagnostic_logs.append("API Key present." if api_key else "API Key missing.")
     
     filename = "sample_video.mp4"
-    if request.method == "POST" and 'video' in request.files:
+    if 'video' in request.files:
         uploaded_file = request.files['video']
         if uploaded_file.filename != '':
             filename = uploaded_file.filename
