@@ -118,7 +118,7 @@ MASTER_TEMPLATE = """
                         <div class="report-box">{{ audit_report|safe }}</div>
                         <br><a href="/"><button style="width: auto;">Run Another Scan</button></a>
                         <h3>Diagnostic Logs</h3>
-                        <pre>{{ logs | join('\\n') }}</pre>
+                        <pre>{{ logs | join('\n') }}</pre>
                     </section>
                 {% elif content_type == 'history' %}
                     <section><h2>Scan History</h2><p>Your previous optimization logs will appear here.</p><br><a href="/"><button style="width: auto;">Back to Dashboard</button></a></section>
@@ -196,7 +196,7 @@ def scan():
         return render_template_string(MASTER_TEMPLATE, content_type="scan", audit_report=error_html, logs=diagnostic_logs, filename=filename)
 
     client = get_gemini_client()
-    client_res = client.models.generate_content(model="gemini-2.5-flash", contents=f"Audit YouTube video file named {filename}")
+    client_res = client.models.generate_content(model="gemini-2.0-flash", contents=f"Audit YouTube video file named {filename}")
     audit_report_html = markdown.markdown(client_res.text) if client_res and client_res.text else "Error generating report"
     return render_template_string(MASTER_TEMPLATE, content_type="scan", audit_report=audit_report_html, logs=diagnostic_logs, filename=filename)
 
