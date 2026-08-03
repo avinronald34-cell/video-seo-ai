@@ -85,22 +85,22 @@ def analyze_video():
     if 'user' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     
-    topic = request.form.get('video_topic')
+    topic = request.form.get('video_topic') or request.form.get('topic')
     if not topic:
-        return "Please provide a video topic or keywords.", 400
+        return jsonify({'error': 'Please provide a video topic.'}), 400
 
     if not gemini_client:
-        return "Gemini API key is not configured on the server.", 500
+        return jsonify({'error': 'Gemini API key is not configured.'}), 500
 
     try:
         prompt = (
             f"Act as an expert YouTube SEO strategist. Generate an optimized package for a video about: '{topic}'. "
-            f"Provide 3 catchy click-worthy titles, a detailed SEO-friendly description with timestamps placeholder, "
+            f"Provide 3 catchy click-worthy titles, a detailed SEO-friendly description, "
             f"and 10 high-ranking comma-separated tags."
         )
         
         response = gemini_client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-2.0-flash',
             contents=prompt
         )
         
@@ -108,7 +108,7 @@ def analyze_video():
         return render_template('result.html', topic=topic, analysis=analysis_result)
         
     except Exception as e:
-        return f"Error generating SEO analysis: {str(e)}", 500
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5002))
