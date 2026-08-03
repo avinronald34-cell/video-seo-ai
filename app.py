@@ -43,7 +43,7 @@ MASTER_TEMPLATE = """
         .container { background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); width: 100%; max-width: 800px; box-sizing: border-box; }
         
         header { border-bottom: 2px solid #eaeaea; padding-bottom: 15px; margin-bottom: 20px; }
-        button { background-color: #0066cc; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; font-weight: bold; }
+        button { background-color: #0066cc; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; font-weight: bold; width: 100%; }
         button:hover { background-color: #0055b3; }
         
         .google-btn { background-color: #ffffff; color: #444; border: 1px solid #ccc; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; text-decoration: none; width: 100%; box-sizing: border-box; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
@@ -52,14 +52,35 @@ MASTER_TEMPLATE = """
         .divider { margin: 20px 0; border-bottom: 1px solid #ddd; position: relative; }
         .divider span { background: #fff; padding: 0 10px; color: #777; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 12px; }
         
-        input[type="text"], input[type="tel"] { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        input[type="text"], input[type="tel"], input[type="email"] { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         .report-box { background: #fafafa; padding: 15px; border: 1px solid #ddd; border-radius: 6px; margin-top: 20px; }
         pre { background: #222; color: #4cd137; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+        .error-msg { color: #e74c3c; font-size: 13px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
-    {% if not session.get('user') %}
-    <!-- Locked Landing Page / Login & Signup Screen -->
+    {% if view_type == 'otp_verify' %}
+    <!-- Step 2: OTP Verification Screen -->
+    <div class="auth-wrapper">
+        <div class="auth-container">
+            <h2>Enter Verification OTP</h2>
+            <p style="color: #666; font-size: 14px; margin-bottom: 20px;">We sent a 4-digit OTP to <b>{{ phone }}</b><br><span style="font-size: 11px; color:#888;">(Hint: Enter code <b>1234</b>)</span></p>
+            
+            {% if error %}
+            <div class="error-msg">{{ error }}</div>
+            {% endif %}
+
+            <form action="/auth/verify-otp" method="POST">
+                <input type="hidden" name="phone" value="{{ phone }}">
+                <input type="text" name="otp" placeholder="Enter 4-digit OTP" maxlength="4" required autofocus>
+                <button type="submit">Verify & Login</button>
+            </form>
+            <br>
+            <a href="/" style="font-size: 12px; color: #0066cc; text-decoration: none;">← Back to Login</a>
+        </div>
+    </div>
+    {% elif not session.get('user') %}
+    <!-- Step 1: Main Login & Signup Portal -->
     <div class="auth-wrapper">
         <div class="auth-container">
             <h2>Video SEO AI</h2>
@@ -73,10 +94,10 @@ MASTER_TEMPLATE = """
 
             <div class="divider"><span>OR</span></div>
 
-            <!-- Phone Number with OTP Form -->
+            <!-- Phone Number Submission -->
             <form action="/auth/phone" method="POST">
                 <input type="tel" name="phone" placeholder="Mobile Number (e.g., +91...)" required>
-                <button type="submit">Continue with Phone OTP</button>
+                <button type="submit">Send OTP</button>
             </form>
         </div>
     </div>
@@ -109,7 +130,7 @@ MASTER_TEMPLATE = """
                             {{ audit_report|safe }}
                         </div>
                         <br>
-                        <a href="/"><button>Run Another Scan</button></a>
+                        <a href="/"><button style="width: auto;">Run Another Scan</button></a>
                         
                         <h3>Diagnostic Logs</h3>
                         <pre>{{ logs | join('\\n') }}</pre>
@@ -118,13 +139,13 @@ MASTER_TEMPLATE = """
                     <section>
                         <h2>Scan History</h2>
                         <p>Your previous video optimization runs will appear here.</p>
-                        <br><a href="/"><button>Back to Dashboard</button></a>
+                        <br><a href="/"><button style="width: auto;">Back to Dashboard</button></a>
                     </section>
                 {% elif content_type == 'support' %}
                     <section>
                         <h2>Support Center</h2>
                         <p>Need assistance with API limitations or audit configuration? Reach out to support.</p>
-                        <br><a href="/"><button>Back to Dashboard</button></a>
+                        <br><a href="/"><button style="width: auto;">Back to Dashboard</button></a>
                     </section>
                 {% else %}
                     <section>
@@ -133,7 +154,7 @@ MASTER_TEMPLATE = """
                             <div style="border: 2px dashed #ccc; padding: 20px; border-radius: 6px; background: #fafafa; margin-bottom: 15px;">
                                 <input type="file" name="video" required>
                             </div>
-                            <button type="submit">Run AI Scan & Analysis</button>
+                            <button type="submit" style="width: auto;">Run AI Scan & Analysis</button>
                         </form>
                     </section>
                 {% endif %}
@@ -151,14 +172,30 @@ def index():
 
 @app.route("/auth/google")
 def auth_google():
-    session['user'] = "creator@videoseo.ai"
+    # In a full production app, this redirects to Google's actual OAuth server.
+    # For a simulated secure gate, we set the credential session token properly.
+    session['user'] = "google_verified_creator@gmail.com"
     return redirect(url_for('index'))
 
 @app.route("/auth/phone", methods=["POST"])
 def auth_phone():
-    phone = request.form.get('phone', 'MobileUser')
-    session['user'] = f"phone_{phone}"
-    return redirect(url_for('index'))
+    phone = request.form.get('phone', '').strip()
+    if len(phone) < 5:
+        return redirect(url_for('index'))
+    # Render OTP input screen instead of logging in directly
+    return render_template_string(MASTER_TEMPLATE, view_type="otp_verify", phone=phone)
+
+@app.route("/auth/verify-otp", methods=["POST"])
+def verify_otp():
+    phone = request.form.get('phone', '')
+    otp = request.form.get('otp', '').strip()
+    
+    # Strict validation: require correct OTP code "1234"
+    if otp == "1234":
+        session['user'] = f"phone_{phone}"
+        return redirect(url_for('index'))
+    else:
+        return render_template_string(MASTER_TEMPLATE, view_type="otp_verify", phone=phone, error="Invalid OTP code. Please enter 1234.")
 
 @app.route("/scan", methods=["POST"])
 def scan():
