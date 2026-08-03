@@ -184,26 +184,26 @@ You are an expert AI Copyright, YouTube Compliance, and SEO Auditor. Analyze the
 12. Final Verdict (Overall Score, Safety Status, Confidence Level)
 """
         
-        # Retry loop for handling temporary 503 high demand traffic spikes
+        # Using a reliable fallback model configuration to bypass 503 limits
         max_retries = 3
         client_res = None
         for attempt in range(max_retries):
             try:
-                diagnostic_logs.append(f"Attempt {attempt + 1} contacting Gemini API...")
+                diagnostic_logs.append(f"Attempt {attempt + 1} using gemini-2.5-flash...")
                 client_res = client.models.generate_content(
-                    model="gemini-3.6-flash", 
+                    model="gemini-2.5-flash", 
                     contents=prompt_text
                 )
                 break
             except Exception as inner_e:
-                if "503" in str(inner_e) and attempt < max_retries - 1:
-                    diagnostic_logs.append(f"Encountered high demand (503). Retrying in {2 ** attempt} seconds...")
+                if attempt < max_retries - 1:
+                    diagnostic_logs.append(f"Encountered temporary limit. Retrying in {2 ** attempt} seconds...")
                     time.sleep(2 ** attempt)
                 else:
                     raise inner_e
         
         audit_report_text = client_res.text if client_res and client_res.text else "No response generated from AI."
-        diagnostic_logs.append("Successfully generated comprehensive 12-point audit report via Gemini.")
+        diagnostic_logs.append("Successfully generated comprehensive 12-point audit report.")
     except Exception as e:
         audit_report_text = f"AI Generation Error: {str(e)}"
         diagnostic_logs.append(f"Error calling Gemini API: {str(e)}")
