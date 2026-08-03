@@ -167,9 +167,9 @@ def scan():
         client = get_gemini_client()
         prompt_text = f"Provide a complete YouTube video SEO audit, optimized tags, metadata title suggestions, and a compliance review for a video titled or named: {filename}"
         
-        # Updated to use gemini-2.5-flash
+        # Updated to use gemini-3.6-flash
         client_res = client.models.generate_content(
-            model="gemini-2.5-flash", 
+            model="gemini-3.6-flash", 
             contents=prompt_text
         )
         
