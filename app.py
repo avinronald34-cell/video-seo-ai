@@ -35,7 +35,7 @@ MASTER_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video SEO AI Portal</title>
+    <title>Video SEO & Compliance AI Portal</title>
     <meta name="theme-color" content="#000000">
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
@@ -48,13 +48,16 @@ MASTER_TEMPLATE = """
         .sidebar-top a:hover, .sidebar-top a.active { background-color: #2a2a40; color: #fff; }
         .logout-btn { background-color: #e74c3c; color: white; text-align: center; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; display: block; }
         .main-content { flex: 1; padding: 30px; overflow-y: auto; background-color: #f4f4f9; box-sizing: border-box; display: flex; justify-content: center; align-items: flex-start; }
-        .container { background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); width: 100%; max-width: 800px; box-sizing: border-box; }
+        .container { background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); width: 100%; max-width: 900px; box-sizing: border-box; }
         header { border-bottom: 2px solid #eaeaea; padding-bottom: 15px; margin-bottom: 20px; }
         button { background-color: #0066cc; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; font-weight: bold; width: 100%; }
         button:hover { background-color: #0055b3; }
         .google-btn { background-color: #ffffff; color: #444; border: 1px solid #ccc; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; text-decoration: none; width: 100%; box-sizing: border-box; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .google-btn:hover { background-color: #f8f8f8; }
-        .report-box { background: #fafafa; padding: 15px; border: 1px solid #ddd; border-radius: 6px; margin-top: 20px; }
+        .report-box { background: #fafafa; padding: 20px; border: 1px solid #ddd; border-radius: 6px; margin-top: 20px; line-height: 1.6; }
+        .report-box table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; }
+        .report-box th, .report-box td { border: 1px solid #ddd; padding: 8px 12px; font-size: 14px; text-align: left; }
+        .report-box th { background-color: #eee; }
         pre { background: #222; color: #4cd137; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
     </style>
 </head>
@@ -87,30 +90,31 @@ MASTER_TEMPLATE = """
     <div class="main-content">
         <div class="container">
             <header>
-                <h1>Video SEO & Compliance Scanner</h1>
+                <h1>Video Copyright, Compliance & SEO Audit Portal</h1>
                 <p style="color: #666; font-size: 14px; margin-top: 5px;">Logged in as: <b>{{ session.get('user') }}</b></p>
             </header>
             <main>
                 {% if content_type == 'scan' %}
                     <section>
-                        <h2>Audit Report for: {{ filename }}</h2>
+                        <h2>Comprehensive Compliance & SEO Report: {{ filename }}</h2>
                         <div class="report-box">{{ audit_report|safe }}</div>
                         <br><a href="/"><button style="width: auto;">Run Another Scan</button></a>
-                        <h3>Diagnostic Logs</h3>
+                        <h3 style="margin-top: 20px;">Diagnostic Logs</h3>
                         <pre>{{ logs | join('\n') }}</pre>
                     </section>
                 {% elif content_type == 'history' %}
-                    <section><h2>Scan History</h2><p>Your previous optimization logs will appear here.</p><br><a href="/"><button style="width: auto;">Back to Dashboard</button></a></section>
+                    <section><h2>Scan History</h2><p>Your previous audit reports will appear here.</p><br><a href="/"><button style="width: auto;">Back to Dashboard</button></a></section>
                 {% elif content_type == 'support' %}
-                    <section><h2>Support Center</h2><p>Reach out to support for configuration questions.</p><br><a href="/"><button style="width: auto;">Back to Dashboard</button></a></section>
+                    <section><h2>Support Center</h2><p>Contact support for pipeline optimization rules.</p><br><a href="/"><button style="width: auto;">Back to Dashboard</button></a></section>
                 {% else %}
                     <section>
-                        <h2>Select your video file (.mp4, .mov)</h2>
+                        <h2>Upload Video for Deep Audit (.mp4, .mov)</h2>
+                        <p style="font-size: 13px; color: #666;">Runs full copyright assessment, scene timeline checks, community guideline safety filters, and deep SEO optimization generation.</p>
                         <form action="/scan" method="POST" enctype="multipart/form-data" style="margin-top: 15px;">
-                            <div style="border: 2px dashed #ccc; padding: 20px; border-radius: 6px; background: #fafafa; margin-bottom: 15px;">
+                            <div style="border: 2px dashed #ccc; padding: 25px; border-radius: 6px; background: #fafafa; margin-bottom: 15px; text-align: center;">
                                 <input type="file" name="video" required>
                             </div>
-                            <button type="submit" style="width: auto;">Run AI Scan & Analysis</button>
+                            <button type="submit" style="width: auto;">Run Full AI Audit Suite</button>
                         </form>
                     </section>
                 {% endif %}
@@ -165,16 +169,32 @@ def scan():
 
     try:
         client = get_gemini_client()
-        prompt_text = f"Provide a complete YouTube video SEO audit, optimized tags, metadata title suggestions, and a compliance review for a video titled or named: {filename}"
         
-        # Updated to use gemini-3.6-flash
+        # Comprehensive system prompt instructing the model to output the 12 specific structured blocks
+        prompt_text = f"""
+You are an expert AI Copyright, YouTube Compliance, and SEO Auditor. Analyze the file context named '{filename}' and output a professional, complete report in markdown format following these exact sections with emojis and markdown tables where appropriate:
+
+1. Executive Summary (Overall Upload Safety Score 0-100, Copyright Risk, Content ID Risk, Community Guidelines Risk, Reused Content Risk, Monetization Risk, AI Content Detection, Final Recommendation)
+2. Scene Timeline Analysis (Timestamp, Description, Original/Third-party, Copyright Risk, Trademark Detection, Recommendation in a markdown table)
+3. Audio Analysis (Background Music, Speech, AI Voice Detection, Music Similarity, Estimated Content ID Risk)
+4. Visual Analysis (Logos, Brands, Celebrities, Faces, Children, TV Shows, Movies, Anime, Sports, Gaming, Memes, Artwork, Screenshots, Text Overlays)
+5. Copyright Assessment (Claim Probability %, Strike Probability %, Manual Review Probability %, Confidence Score + disclaimer note that these are AI estimates, not guarantees)
+6. Fair Use Indicators (Commentary, Criticism, Education, Review, Transformation + legal doctrine disclaimer)
+7. Reused Content Analysis (Original %, AI %, Stock %, Third-party %, Human Commentary %, Monetization Risk)
+8. Community Guidelines Review (Violence, Adult Content, Dangerous Acts, Hate Speech, Harassment, Medical Claims, Financial Claims, Misinformation)
+9. Technical Quality (Resolution, Audio Quality, Loudness, Captions, Aspect Ratio, Editing, Hook Strength, Retention Potential)
+10. SEO Optimization (SEO Title, Viral Title, Description, Tags, Hashtags, Thumbnail Suggestions)
+11. Growth Suggestions (At least 10 actionable recommendations for watch time, CTR, retention, subscribers, monetization)
+12. Final Verdict (Overall Score, Safety Status, Confidence Level)
+"""
+        
         client_res = client.models.generate_content(
             model="gemini-3.6-flash", 
             contents=prompt_text
         )
         
-        audit_report_html = markdown.markdown(client_res.text) if client_res and client_res.text else "<p>No response generated from AI.</p>"
-        diagnostic_logs.append("Successfully generated audit report via Gemini.")
+        audit_report_html = markdown.markdown(client_res.text, extensions=['tables']) if client_res and client_res.text else "<p>No response generated from AI.</p>"
+        diagnostic_logs.append("Successfully generated comprehensive 12-point audit report via Gemini.")
     except Exception as e:
         audit_report_html = f"<p style='color:red;'>AI Generation Error: {str(e)}</p>"
         diagnostic_logs.append(f"Error calling Gemini API: {str(e)}")
