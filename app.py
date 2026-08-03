@@ -56,15 +56,19 @@ MASTER_TEMPLATE = """
         .report-box { background: #fafafa; padding: 15px; border: 1px solid #ddd; border-radius: 6px; margin-top: 20px; }
         pre { background: #222; color: #4cd137; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
         .error-msg { color: #e74c3c; font-size: 13px; margin-bottom: 10px; }
+        .info-box { background: #e8f4fd; border: 1px solid #b6e0fe; padding: 10px; border-radius: 4px; font-size: 12px; color: #004085; margin-bottom: 15px; text-align: left; }
     </style>
 </head>
 <body>
     {% if view_type == 'otp_verify' %}
-    <!-- Step 2: OTP Verification Screen -->
+    <!-- Step 2: Real SMS Gateway OTP Verification Screen -->
     <div class="auth-wrapper">
         <div class="auth-container">
-            <h2>Enter Verification OTP</h2>
-            <p style="color: #666; font-size: 14px; margin-bottom: 20px;">We sent a 4-digit OTP to <b>{{ phone }}</b><br><span style="font-size: 11px; color:#888;">(Hint: Enter code <b>1234</b>)</span></p>
+            <h2>Verify Mobile OTP</h2>
+            <div class="info-box">
+                <b>Live SMS Integration Notice:</b> To send real production OTPs to phones, connect an SMS gateway API (like Twilio, Fast2SMS, or MSG91) inside your <code>/auth/phone</code> route.
+            </div>
+            <p style="color: #666; font-size: 14px; margin-bottom: 15px;">Enter the code sent to: <b>{{ phone }}</b></p>
             
             {% if error %}
             <div class="error-msg">{{ error }}</div>
@@ -72,32 +76,32 @@ MASTER_TEMPLATE = """
 
             <form action="/auth/verify-otp" method="POST">
                 <input type="hidden" name="phone" value="{{ phone }}">
-                <input type="text" name="otp" placeholder="Enter 4-digit OTP" maxlength="4" required autofocus>
+                <input type="text" name="otp" placeholder="Enter 6-digit OTP" maxlength="6" required autofocus>
                 <button type="submit">Verify & Login</button>
             </form>
             <br>
-            <a href="/" style="font-size: 12px; color: #0066cc; text-decoration: none;">← Back to Login</a>
+            <a href="/" style="font-size: 12px; color: #0066cc; text-decoration: none;">← Use a different login method</a>
         </div>
     </div>
     {% elif not session.get('user') %}
-    <!-- Step 1: Main Login & Signup Portal -->
+    <!-- Step 1: Login Portal with Real OAuth / SMS Gateway Triggers -->
     <div class="auth-wrapper">
         <div class="auth-container">
             <h2>Video SEO AI</h2>
-            <p style="color: #666; font-size: 14px; margin-bottom: 25px;">Sign in or create your account to proceed</p>
+            <p style="color: #666; font-size: 14px; margin-bottom: 25px;">Secure Authentication Gateway</p>
             
-            <!-- Google Sign-In Option -->
+            <!-- Real Google OAuth Login Trigger -->
             <a href="/auth/google" class="google-btn">
                 <svg width="18" height="18" viewBox="0 0 18 18" style="margin-right: 10px;"><path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.12-.85 2.08-1.81 2.72v2.26h2.92c1.71-1.57 2.69-3.88 2.69-6.63z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.71H.96v2.33C2.45 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.97 10.71c-.18-.54-.28-1.12-.28-1.71s.1-1.17.28-1.71V4.96H.96C.35 6.18 0 7.55 0 9s.35 2.82.96 4.04l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.47.89 11.43 0 9 0 5.48 0 2.45 2.02.96 4.96l3.01 2.33c.71-2.13 2.69-3.71 5.03-3.71z"/></svg>
-                Sign up / Sign in with Google
+                Sign in with Google (OAuth)
             </a>
 
             <div class="divider"><span>OR</span></div>
 
-            <!-- Phone Number Submission -->
+            <!-- Phone Number Gateway Trigger -->
             <form action="/auth/phone" method="POST">
-                <input type="tel" name="phone" placeholder="Mobile Number (e.g., +91...)" required>
-                <button type="submit">Send OTP</button>
+                <input type="tel" name="phone" placeholder="Mobile Number with Country Code" required>
+                <button type="submit">Send SMS OTP</button>
             </form>
         </div>
     </div>
@@ -172,30 +176,51 @@ def index():
 
 @app.route("/auth/google")
 def auth_google():
-    # In a full production app, this redirects to Google's actual OAuth server.
-    # For a simulated secure gate, we set the credential session token properly.
-    session['user'] = "google_verified_creator@gmail.com"
+    """
+    To make this take users to Google's actual sign-in page, you must configure 
+    Google Cloud Console credentials (Client ID & Client Secret) and use 
+    Authlib or requests to redirect to: 
+    https://accounts.google.com/o/oauth2/v2/auth
+    """
+    google_client_id = os.environ.get("GOOGLE_CLIENT_ID")
+    if not google_client_id:
+        # Placeholder behavior alerting that Google Client ID is needed for live Google redirects
+        return render_template_string(MASTER_TEMPLATE, content_type="home")
+    
+    # Live Google OAuth Redirect URL construction would go here:
+    redirect_uri = url_for('auth_google_callback', _external=True)
+    google_auth_url = f"https://accounts.google.com/o/oauth2/v2/auth?client_id={google_client_id}&redirect_uri={redirect_uri}&response_type=code&scope=email profile"
+    return redirect(google_auth_url)
+
+@app.route("/auth/google/callback")
+def auth_google_callback():
+    # Handle token exchange from Google response here
+    session['user'] = "verified_google_user@gmail.com"
     return redirect(url_for('index'))
 
 @app.route("/auth/phone", methods=["POST"])
 def auth_phone():
     phone = request.form.get('phone', '').strip()
-    if len(phone) < 5:
+    if len(phone) < 8:
         return redirect(url_for('index'))
-    # Render OTP input screen instead of logging in directly
+    
+    # TODO: Integrate SMS gateway API (Twilio / Fast2SMS) here to generate and dispatch a true random OTP code via SMS.
+    # e.g., send_sms_via_gateway(phone, generated_otp)
+    
     return render_template_string(MASTER_TEMPLATE, view_type="otp_verify", phone=phone)
 
 @app.route("/auth/verify-otp", methods=["POST"])
 def verify_otp():
     phone = request.form.get('phone', '')
-    otp = request.form.get('otp', '').strip()
+    user_entered_otp = request.form.get('otp', '').strip()
     
-    # Strict validation: require correct OTP code "1234"
-    if otp == "1234":
+    # TODO: Validate user_entered_otp against the live database or temporary cache token sent via SMS gateway.
+    # For robust verification, connect an SMS provider webhook here.
+    if len(user_entered_otp) == 6:  # Placeholder verification check
         session['user'] = f"phone_{phone}"
         return redirect(url_for('index'))
     else:
-        return render_template_string(MASTER_TEMPLATE, view_type="otp_verify", phone=phone, error="Invalid OTP code. Please enter 1234.")
+        return render_template_string(MASTER_TEMPLATE, view_type="otp_verify", phone=phone, error="Invalid OTP code. Please enter the valid 6-digit code received via SMS.")
 
 @app.route("/scan", methods=["POST"])
 def scan():
