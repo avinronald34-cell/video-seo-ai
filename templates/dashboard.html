@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AI Video Inspector Dashboard</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,Arial,sans-serif;
+}
+
+body{
+background:#f3f6fb;
+color:#1f2937;
+}
+
+/* Header */
+
+.header{
+
+background:#111827;
+
+color:white;
+
+padding:20px 40px;
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+flex-wrap:wrap;
+
+gap:15px;
+
+}
+
+.logo{
+
+font-size:30px;
+
+font-weight:bold;
+
+}
+
+.user{
+
+font-size:16px;
+
+font-weight:bold;
+
+}
+
+.logout{
+
+background:#ef4444;
+
+color:white;
+
+padding:10px 20px;
+
+border:none;
+
+border-radius:10px;
+
+cursor:pointer;
+
+font-size:15px;
+
+}
+
+.logout:hover{
+
+background:#dc2626;
+
+}
+
+/* Container */
+
+.container{
+
+width:92%;
+
+max-width:1200px;
+
+margin:35px auto;
+
+}
+
+/* Cards */
+
+.card{
+
+background:white;
+
+padding:35px;
+
+border-radius:20px;
+
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+
+margin-bottom:30px;
+
+}
+
+.card h1{
+
+margin-bottom:12px;
+
+}
+
+.card p{
+
+color:#6b7280;
+
+line-height:1.7;
+
+}
+
+/* Upload */
+
+.upload{
+
+margin-top:30px;
+
+}
+
+input[type=file]{
+
+width:100%;
+
+padding:18px;
+
+border:2px dashed #CBD5E1;
+
+border-radius:12px;
+
+background:#F8FAFC;
+
+font-size:15px;
+
+cursor:pointer;
+
+}
+
+input[type=file]:hover{
+
+border-color:#2563EB;
+
+}
+
+/* Buttons */
+
+.scan{
+
+margin-top:25px;
+
+background:#2563EB;
+
+color:white;
+
+padding:15px 35px;
+
+border:none;
+
+border-radius:12px;
+
+font-size:17px;
+
+cursor:pointer;
+
+font-weight:bold;
+
+transition:.3s;
+
+}
+
+.scan:hover{
+
+background:#1d4ed8;
+
+}
+
+/* Statistics */
+
+.stats{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+
+gap:20px;
+
+margin-top:40px;
+
+}
+
+.box{
+
+background:#F8FAFC;
+
+padding:25px;
+
+border-radius:15px;
+
+text-align:center;
+
+}
+
+.number{
+
+font-size:36px;
+
+font-weight:bold;
+
+color:#2563EB;
+
+margin-bottom:10px;
+
+}
+
+/* History */
+
+table{
+
+width:100%;
+
+border-collapse:collapse;
+
+margin-top:25px;
+
+}
+
+th{
+
+background:#111827;
+
+color:white;
+
+padding:14px;
+
+}
+
+td{
+
+padding:14px;
+
+border-bottom:1px solid #eee;
+
+text-align:center;
+
+}
+
+tr:hover{
+
+background:#f8fafc;
+
+}
+
+.view-btn{
+
+display:inline-block;
+
+background:#2563EB;
+
+color:white;
+
+padding:9px 16px;
+
+border-radius:8px;
+
+text-decoration:none;
+
+font-size:14px;
+
+}
+
+.view-btn:hover{
+
+background:#1d4ed8;
+
+}
+
+.empty{
+
+padding:30px;
+
+text-align:center;
+
+color:#888;
+
+}
+
+/* ==========================
+FULL SCREEN LOADER
+========================== */
+
+#loadingOverlay{
+
+display:none;
+
+position:fixed;
+
+top:0;
+left:0;
+
+width:100%;
+height:100%;
+
+background:rgba(15,23,42,.95);
+
+justify-content:center;
+
+align-items:center;
+
+z-index:999999;
+
+}
+
+.loader-box{
+
+background:white;
+
+width:460px;
+
+max-width:92%;
+
+padding:45px;
+
+border-radius:20px;
+
+text-align:center;
+
+box-shadow:0 20px 60px rgba(0,0,0,.35);
+
+}
+
+.loader-box h2{
+
+font-size:30px;
+
+margin-bottom:15px;
+
+}
+
+#loadingText{
+
+font-size:18px;
+
+color:#4b5563;
+
+margin-bottom:25px;
+
+}
+
+.progress{
+
+width:100%;
+
+height:22px;
+
+background:#E5E7EB;
+
+border-radius:50px;
+
+overflow:hidden;
+
+}
+
+#progressBar{
+
+height:100%;
+
+width:0%;
+
+background:#2563EB;
+
+transition:width .4s;
+
+}
+
+#progressValue{
+
+margin-top:18px;
+
+font-size:28px;
+
+font-weight:bold;
+
+color:#2563EB;
+
+}
+
+.wait{
+
+margin-top:20px;
+
+line-height:1.7;
+
+color:#6b7280;
+
+}
+
+@media(max-width:768px){
+
+.header{
+
+justify-content:center;
+
+text-align:center;
+
+}
+
+.card{
+
+padding:25px;
+
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+    <!-- ==========================
+HEADER
+========================== -->
+
+<div class="header">
+
+    <div class="logo">
+        🎥 AI Video Inspector
+    </div>
+
+    <div>
+
+        <span class="user">
+
+            👋 {{ user }}
+
+        </span>
+
+        &nbsp;&nbsp;
+
+        <a href="/logout">
+
+            <button class="logout">
+
+                🚪 Logout
+
+            </button>
+
+        </a>
+
+    </div>
+
+</div>
+
+
+
+<!-- ==========================
+MAIN CONTAINER
+========================== -->
+
+<div class="container">
+
+
+
+<!-- ==========================
+UPLOAD CARD
+========================== -->
+
+<div class="card">
+
+<h1>
+
+Welcome to AI Video Inspector
+
+</h1>
+
+<p>
+
+Upload your video and let Gemini AI analyze:
+
+<br><br>
+
+✅ Copyright Risk
+
+<br>
+
+✅ Content ID Probability
+
+<br>
+
+✅ Audio Analysis
+
+<br>
+
+✅ SEO Score
+
+<br>
+
+✅ Thumbnail Suggestions
+
+<br>
+
+✅ Community Guidelines
+
+</p>
+
+
+
+<form
+
+id="uploadForm"
+
+action="/scan"
+
+method="POST"
+
+enctype="multipart/form-data"
+
+>
+
+<div class="upload">
+
+<input
+
+id="videoInput"
+
+type="file"
+
+name="video"
+
+accept="video/*"
+
+required>
+
+</div>
+
+
+
+<button
+
+id="scanButton"
+
+class="scan"
+
+type="submit">
+
+🚀 Start AI Scan
+
+</button>
+
+</form>
+
+
+
+<!-- ==========================
+STATISTICS
+========================== -->
+
+<div class="stats">
+
+<div class="box">
+
+<div class="number">
+
+{{ stats["total_scans"] }}
+
+</div>
+
+Total Videos
+
+</div>
+
+
+
+<div class="box">
+
+<div class="number">
+
+{{ stats["avg_seo"] }}/100
+
+</div>
+
+Average SEO
+
+</div>
+
+
+
+<div class="box">
+
+<div class="number">
+
+{{ stats["risk_count"] }}
+
+</div>
+
+Copyright Alerts
+
+</div>
+
+
+
+<div class="box">
+
+<div class="number" style="font-size:20px;">
+
+{{ stats["latest_scan"] }}
+
+</div>
+
+Last Scan
+
+</div>
+
+</div>
+
+</div>
+<!-- ==========================
+SCAN HISTORY
+========================== -->
+
+<div class="card">
+
+<h2>
+
+📜 Scan History
+
+</h2>
+
+{% if scans %}
+
+<table>
+
+<tr>
+
+<th>Video Name</th>
+
+<th>Copyright</th>
+
+<th>SEO</th>
+
+<th>Content ID</th>
+
+<th>Date</th>
+
+<th>Action</th>
+
+</tr>
+
+{% for scan in scans %}
+
+<tr>
+
+<td>
+
+{{ scan["filename"] }}
+
+</td>
+
+<td>
+
+{{ scan["copyright_score"] }}
+
+</td>
+
+<td>
+
+{{ scan["seo_score"] }}/100
+
+</td>
+
+<td>
+
+{{ scan["content_id"] }}
+
+</td>
+
+<td>
+
+{{ scan["created_at"] }}
+
+</td>
+
+<td>
+
+<a
+href="/report/{{ scan['id'] }}"
+class="view-btn">
+
+🔍 View Report
+
+</a>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+{% else %}
+
+<div class="empty">
+
+<h3>No videos scanned yet.</h3>
+
+<br>
+
+Upload your first video to generate an AI report.
+
+</div>
+
+{% endif %}
+
+</div>
+<!-- ==========================
+FULL SCREEN LOADING
+========================== -->
+
+<div id="loadingOverlay">
+
+    <div class="loader-box">
+
+        <h2>
+            🎥 AI Video Inspector
+        </h2>
+
+        <p id="loadingText">
+            Preparing upload...
+        </p>
+
+        <div class="progress">
+
+            <div id="progressBar"></div>
+
+        </div>
+
+        <div id="progressValue">
+            0%
+        </div>
+
+        <p class="wait">
+
+            Please wait while Gemini AI analyzes your video.
+
+            <br><br>
+
+            Average processing time:
+            <strong>30–90 seconds</strong>
+
+        </p>
+
+    </div>
+
+</div>
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const form = document.getElementById("uploadForm");
+
+    if (!form) return;
+
+    form.addEventListener("submit", function (e) {
+
+        e.preventDefault();
+
+        const file = document.getElementById("videoInput").files[0];
+
+        if (!file) {
+            alert("Please select a video.");
+            return;
+        }
+
+        // Disable button
+        const scanButton = document.getElementById("scanButton");
+        scanButton.disabled = true;
+        scanButton.innerHTML = "⏳ Processing...";
+
+        // Show overlay
+        document.getElementById("loadingOverlay").style.display = "flex";
+
+        const progressBar = document.getElementById("progressBar");
+        const progressValue = document.getElementById("progressValue");
+        const loadingText = document.getElementById("loadingText");
+
+        let progress = 0;
+
+        const stages = [
+            { percent:5, text:"📤 Uploading video..." },
+            { percent:15, text:"☁️ Sending video to Gemini AI..." },
+            { percent:30, text:"🎞️ Analyzing video frames..." },
+            { percent:45, text:"🛡️ Checking copyright..." },
+            { percent:60, text:"🎵 Analyzing audio..." },
+            { percent:75, text:"🏷️ Detecting logos..." },
+            { percent:88, text:"🚀 Generating SEO..." },
+            { percent:95, text:"📄 Preparing report..." }
+        ];
+
+        let stage = 0;
+
+        const timer = setInterval(function () {
+
+            if (progress < 95) {
+
+                progress++;
+
+                progressBar.style.width = progress + "%";
+                progressValue.innerHTML = progress + "%";
+
+                if (stage < stages.length && progress >= stages[stage].percent) {
+
+                    loadingText.innerHTML = stages[stage].text;
+                    stage++;
+
+                }
+
+            }
+
+        }, 700);
+
+        // Give browser time to display loader
+        setTimeout(function(){
+
+            form.submit();
+
+        },200);
+
+    });
+
+});
+
+</script>
+
+</body>
+
+</html>
+

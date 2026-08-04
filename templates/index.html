@@ -1,108 +1,547 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title>Video SEO &amp; Content Scanner</title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2113.65">
-  <style type="text/css">
-    body {background-color: #eef3f1}
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 18.0px Helvetica; color: #0f111a; -webkit-text-stroke: #0f111a; background-color: #ffffff}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 18.0px Helvetica; color: #0f111a; -webkit-text-stroke: #0f111a; background-color: #ffffff; min-height: 22.0px}
-    span.s1 {font-kerning: none}
-  </style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AI Video Inspector</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+background:#f3f6fb;
+color:#1f2937;
+}
+
+.container{
+width:90%;
+max-width:1100px;
+margin:auto;
+padding:50px 0;
+}
+
+.header{
+text-align:center;
+margin-bottom:40px;
+}
+
+.header h1{
+font-size:48px;
+color:#111827;
+}
+
+.subtitle{
+margin-top:15px;
+font-size:18px;
+color:#6b7280;
+}
+
+.card{
+background:white;
+padding:45px;
+border-radius:20px;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+}
+
+.user{
+background:#ecfdf5;
+padding:15px;
+border-radius:12px;
+text-align:center;
+font-size:18px;
+font-weight:bold;
+color:#059669;
+margin-bottom:30px;
+}
+
+.login-area{
+text-align:center;
+}
+
+.upload{
+margin-top:30px;
+}
+
+input[type=file]{
+width:100%;
+padding:18px;
+border:2px dashed #CBD5E1;
+background:#F8FAFC;
+border-radius:12px;
+cursor:pointer;
+}
+
+input[type=file]:hover{
+border-color:#2563eb;
+}
+
+.button-area{
+text-align:center;
+margin-top:30px;
+}
+
+.bottom-buttons{
+display:flex;
+justify-content:center;
+gap:15px;
+margin-top:25px;
+flex-wrap:wrap;
+}
+
+.btn{
+display:inline-block;
+padding:15px 35px;
+border-radius:10px;
+text-decoration:none;
+border:none;
+cursor:pointer;
+font-size:17px;
+font-weight:bold;
+transition:.3s;
+color:white;
+}
+
+.scan{
+background:#111827;
+min-width:260px;
+}
+
+.scan:hover{
+background:#2563eb;
+}
+
+.google{
+background:#4285F4;
+}
+
+.google:hover{
+background:#2563eb;
+}
+
+.logout{
+background:#ef4444;
+}
+
+.logout:hover{
+background:#dc2626;
+}
+
+.dashboard{
+background:#16a34a;
+}
+
+.dashboard:hover{
+background:#15803d;
+}
+
+.features{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:20px;
+margin-top:45px;
+}
+
+.feature{
+background:#F8FAFC;
+padding:30px;
+border-radius:16px;
+text-align:center;
+}
+
+.feature h2{
+font-size:42px;
+}
+
+.feature h3{
+margin-top:15px;
+}
+
+.feature p{
+margin-top:12px;
+color:#555;
+line-height:1.7;
+}
+
+.footer{
+text-align:center;
+margin-top:35px;
+color:#777;
+}
+
+/* ===========================
+   FULL SCREEN LOADER
+=========================== */
+
+#loadingOverlay{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(15,23,42,.95);
+justify-content:center;
+align-items:center;
+z-index:999999;
+}
+
+.loader-box{
+width:450px;
+max-width:92%;
+background:white;
+padding:45px;
+border-radius:20px;
+text-align:center;
+box-shadow:0 20px 60px rgba(0,0,0,.35);
+}
+
+.loader-box h2{
+font-size:30px;
+margin-bottom:15px;
+color:#111827;
+}
+
+#loadingText{
+font-size:18px;
+color:#4b5563;
+margin-bottom:25px;
+}
+
+.progress{
+width:100%;
+height:22px;
+background:#E5E7EB;
+border-radius:50px;
+overflow:hidden;
+}
+
+#progressBar{
+height:100%;
+width:0%;
+background:#2563EB;
+transition:width .4s;
+}
+
+#progressValue{
+margin-top:18px;
+font-size:28px;
+font-weight:bold;
+color:#2563EB;
+}
+
+.wait{
+margin-top:25px;
+color:#6b7280;
+line-height:1.8;
+}
+
+@media(max-width:768px){
+
+.header h1{
+font-size:36px;
+}
+
+.card{
+padding:30px;
+}
+
+.bottom-buttons{
+flex-direction:column;
+align-items:center;
+}
+
+.btn{
+width:100%;
+max-width:320px;
+}
+
+}
+
+</style>
+
 </head>
+
 <body>
-<p class="p1"><span class="s1">&lt;!DOCTYPE html&gt;</span></p>
-<p class="p1"><span class="s1">&lt;html lang="en"&gt;</span></p>
-<p class="p1"><span class="s1">&lt;head&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;title&gt;Video SEO AI Portal&lt;/title&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;meta name="theme-color" content="#000000"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;style&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.auth-wrapper { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; background-color: #1e1e2d; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.auth-container { background: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.auth-container h2 { margin-bottom: 10px; color: #1e1e2d; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.sidebar { width: 250px; background-color: #1e1e2d; color: #fff; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; justify-content: space-between; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.sidebar-top h2 { font-size: 18px; margin-bottom: 25px; color: #00d2ff; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.sidebar-top a { display: block; color: #a2a2bc; text-decoration: none; padding: 10px 15px; border-radius: 6px; margin-bottom: 8px; font-weight: bold; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.sidebar-top a:hover, .sidebar-top a.active { background-color: #2a2a40; color: #fff; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.logout-btn { background-color: #e74c3c; color: white; text-align: center; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; display: block; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.main-content { flex: 1; padding: 30px; overflow-y: auto; background-color: #f4f4f9; box-sizing: border-box; display: flex; justify-content: center; align-items: flex-start; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.container { background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); width: 100%; max-width: 800px; box-sizing: border-box; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>header { border-bottom: 2px solid #eaeaea; padding-bottom: 15px; margin-bottom: 20px; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>button { background-color: #0066cc; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; font-weight: bold; width: 100%; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>button:hover { background-color: #0055b3; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.google-btn { background-color: #ffffff; color: #444; border: 1px solid #ccc; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; text-decoration: none; width: 100%; box-sizing: border-box; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.google-btn:hover { background-color: #f8f8f8; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.report-box { background: #fafafa; padding: 15px; border: 1px solid #ddd; border-radius: 6px; margin-top: 20px; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>pre { background: #222; color: #4cd137; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
-<p class="p1"><span class="s1">&lt;body&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>{% if not session.get('user') %}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="auth-wrapper"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div class="auth-container"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;h2&gt;Video SEO AI&lt;/h2&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;p style="color: #666; font-size: 14px; margin-bottom: 25px;"&gt;Sign in to your account&lt;/p&gt;</span></p>
-<p class="p2"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;a href="/auth/google" class="google-btn"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;svg width="18" height="18" viewBox="0 0 18 18" style="margin-right: 10px;"&gt;&lt;path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.12-.85 2.08-1.81 2.72v2.26h2.92c1.71-1.57 2.69-3.88 2.69-6.63z"/&gt;&lt;path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.71H.96v2.33C2.45 15.98 5.48 18 9 18z"/&gt;&lt;path fill="#FBBC05" d="M3.97 10.71c-.18-.54-.28-1.12-.28-1.71s.1-1.17.28-1.71V4.96H.96C.35 6.18 0 7.55 0 9s.35 2.82.96 4.04l3.01-2.33z"/&gt;&lt;path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.47.89 11.43 0 9 0 5.48 0 2.45 2.02.96 4.96l3.01 2.33c.71-2.13 2.69-3.71 5.03-3.71z"/&gt;&lt;/svg&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>Sign in with Google</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/a&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>{% else %}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="sidebar"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div class="sidebar-top"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;h2&gt;Video SEO AI&lt;/h2&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;a href="/" class="{{ 'active' if content_type == 'home' else '' }}"&gt;Dashboard&lt;/a&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;a href="/history" class="{{ 'active' if content_type == 'history' else '' }}"&gt;Scan History&lt;/a&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;a href="/support" class="{{ 'active' if content_type == 'support' else '' }}"&gt;Support&lt;/a&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;a href="/logout" class="logout-btn"&gt;Logout&lt;/a&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="main-content"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div class="container"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;header&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;h1&gt;Video SEO &amp; Compliance Scanner&lt;/h1&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;p style="color: #666; font-size: 14px; margin-top: 5px;"&gt;Logged in as: &lt;b&gt;{{ session.get('user') }}&lt;/b&gt;&lt;/p&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/header&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;main&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>{% if content_type == 'scan' %}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;section&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;h2&gt;Audit Report for: {{ filename }}&lt;/h2&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;div class="report-box"&gt;{{ audit_report|safe }}&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;br&gt;&lt;a href="/"&gt;&lt;button style="width: auto;"&gt;Run Another Scan&lt;/button&gt;&lt;/a&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;h3&gt;Diagnostic Logs&lt;/h3&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;pre&gt;{{ logs | join('\n') }}&lt;/pre&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;/section&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>{% elif content_type == 'history' %}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;section&gt;&lt;h2&gt;Scan History&lt;/h2&gt;&lt;p&gt;Your previous optimization logs will appear here.&lt;/p&gt;&lt;br&gt;&lt;a href="/"&gt;&lt;button style="width: auto;"&gt;Back to Dashboard&lt;/button&gt;&lt;/a&gt;&lt;/section&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>{% elif content_type == 'support' %}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;section&gt;&lt;h2&gt;Support Center&lt;/h2&gt;&lt;p&gt;Reach out to support for configuration questions.&lt;/p&gt;&lt;br&gt;&lt;a href="/"&gt;&lt;button style="width: auto;"&gt;Back to Dashboard&lt;/button&gt;&lt;/a&gt;&lt;/section&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>{% else %}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;section&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;h2&gt;Select your video file (.mp4, .mov)&lt;/h2&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;form action="/scan" method="POST" enctype="multipart/form-data" style="margin-top: 15px;"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>&lt;div style="border: 2px dashed #ccc; padding: 20px; border-radius: 6px; background: #fafafa; margin-bottom: 15px;"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                                </span>&lt;input type="file" name="video" required&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>&lt;button type="submit" style="width: auto;"&gt;Run AI Scan &amp; Analysis&lt;/button&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;/form&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;/section&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>{% endif %}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/main&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>{% endif %}</span></p>
-<p class="p1"><span class="s1">&lt;/body&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/html&gt;</span></p>
+
+<div class="container">
+
+<div class="header">
+
+<h1>🎥 AI Video Inspector</h1>
+
+<p class="subtitle">
+Analyze Copyright • Content ID • SEO • YouTube Readiness using Gemini AI
+</p>
+
+</div>
+
+<div class="card">{% if user %}
+
+<div class="user">
+
+✅ Welcome {{ user }}
+
+</div>
+
+<form id="uploadForm"
+      action="/scan"
+      method="POST"
+      enctype="multipart/form-data">
+
+<div class="upload">
+
+<input
+type="file"
+name="video"
+id="videoInput"
+accept="video/*"
+required>
+
+</div>
+
+<div class="button-area">
+
+<button
+type="submit"
+id="scanButton"
+class="btn scan">
+
+🚀 Start AI Scan
+
+</button>
+
+</div>
+
+</form>
+
+<div class="bottom-buttons">
+
+<a href="/dashboard" class="btn dashboard">
+
+📊 Dashboard
+
+</a>
+
+<a href="/logout" class="btn logout">
+
+🚪 Logout
+
+</a>
+
+</div>
+
+{% else %}
+
+<div class="login-area">
+
+<h2 style="margin-bottom:20px;">
+
+Login to Continue
+
+</h2>
+
+<a href="/auth/google" class="btn google">
+
+🔐 Login with Google
+
+</a>
+
+<p style="margin-top:25px;color:#6b7280;">
+
+New users will automatically create an account using Google.
+
+</p>
+
+</div>
+
+{% endif %}
+
+
+
+<div class="features">
+
+<div class="feature">
+
+<h2>🛡️</h2>
+
+<h3>Copyright Detection</h3>
+
+<p>
+
+Detect possible copyright issues before uploading to YouTube.
+
+</p>
+
+</div>
+
+<div class="feature">
+
+<h2>🎵</h2>
+
+<h3>Audio & Content ID</h3>
+
+<p>
+
+Analyze music, voices and estimate Content ID claim probability.
+
+</p>
+
+</div>
+
+<div class="feature">
+
+<h2>🚀</h2>
+
+<h3>SEO Optimization</h3>
+
+<p>
+
+Generate AI-powered titles, descriptions, hashtags and tags.
+
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="footer">
+
+Powered by <b>Gemini AI</b> • AI Video Inspector © 2026
+
+</div>
+
+</div>
+
+
+
+<!-- ==========================
+     FULL SCREEN LOADING
+=========================== -->
+
+<div id="loadingOverlay">
+
+<div class="loader-box">
+
+<h2>
+
+🎥 AI Video Inspector
+
+</h2>
+
+<p id="loadingText">
+
+Preparing upload...
+
+</p>
+
+<div class="progress">
+
+<div id="progressBar"></div>
+
+</div>
+
+<div id="progressValue">
+
+0%
+
+</div>
+
+<p class="wait">
+
+Please wait while AI analyzes your video.
+
+<br><br>
+
+Average processing time:
+
+<strong>30–90 seconds</strong>
+
+</p>
+
+</div>
+
+</div>
+
+<<script>
+
+const form = document.getElementById("uploadForm");
+
+if (form) {
+
+    form.addEventListener("submit", function (e) {
+
+        const file = document.getElementById("videoInput").files[0];
+
+        if (!file) {
+            alert("Please select a video.");
+            e.preventDefault();
+            return;
+        }
+
+        document.getElementById("loadingOverlay").style.display = "flex";
+
+        const scanButton = document.getElementById("scanButton");
+        scanButton.disabled = true;
+        scanButton.innerHTML = "⏳ Processing...";
+
+        const progressBar = document.getElementById("progressBar");
+        const progressValue = document.getElementById("progressValue");
+        const loadingText = document.getElementById("loadingText");
+
+        let progress = 0;
+
+        const stages = [
+            { p: 5, t: "Uploading video..." },
+            { p: 15, t: "Uploading completed..." },
+            { p: 25, t: "Sending video to Gemini AI..." },
+            { p: 35, t: "Analyzing video frames..." },
+            { p: 45, t: "Detecting faces and objects..." },
+            { p: 55, t: "Checking copyright risk..." },
+            { p: 65, t: "Analyzing audio..." },
+            { p: 75, t: "Checking Content ID..." },
+            { p: 85, t: "Generating SEO suggestions..." },
+            { p: 92, t: "Preparing professional report..." },
+            { p: 98, t: "Almost finished..." }
+        ];
+
+        let stage = 0;
+
+        const timer = setInterval(function () {
+
+            if (progress < 98) {
+
+                progress++;
+
+                progressBar.style.width = progress + "%";
+                progressValue.innerHTML = progress + "%";
+
+                if (stage < stages.length && progress >= stages[stage].p) {
+
+                    loadingText.innerHTML = stages[stage].t;
+                    stage++;
+
+                }
+
+            }
+
+        }, 700);
+
+    });
+
+}
+
+</script>
+
 </body>
 </html>

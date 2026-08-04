@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AI Video Inspector Report</title>
+
+
+<style>
+
+
+*{
+
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,Arial,sans-serif;
+
+}
+
+
+
+body{
+
+background:#f1f5f9;
+
+}
+
+
+
+.container{
+
+width:90%;
+max-width:1200px;
+margin:40px auto;
+
+}
+
+
+
+
+.header{
+
+background:#111827;
+color:white;
+padding:35px;
+border-radius:20px;
+text-align:center;
+
+}
+
+
+
+.header h1{
+
+font-size:38px;
+
+}
+
+
+
+.header h2{
+
+margin-top:10px;
+color:#cbd5e1;
+
+}
+
+
+
+
+
+.card{
+
+background:white;
+padding:30px;
+border-radius:20px;
+margin-top:25px;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+
+}
+
+
+
+
+.grid{
+
+display:grid;
+
+grid-template-columns:
+repeat(auto-fit,minmax(320px,1fr));
+
+gap:20px;
+
+}
+
+
+
+
+.circle{
+
+width:180px;
+height:180px;
+border-radius:50%;
+
+background:#2563eb;
+
+color:white;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+margin:25px auto;
+
+font-size:45px;
+font-weight:bold;
+
+}
+
+
+
+.score{
+
+text-align:center;
+
+font-size:55px;
+
+font-weight:bold;
+
+color:#2563eb;
+
+}
+
+
+
+
+.item{
+
+padding:12px 0;
+
+border-bottom:1px solid #eee;
+
+line-height:1.6;
+
+}
+
+
+
+.badge{
+
+display:inline-block;
+
+padding:10px 22px;
+
+border-radius:30px;
+
+font-weight:bold;
+
+}
+
+
+
+.low{
+
+background:#dcfce7;
+
+color:#166534;
+
+}
+
+
+
+.medium{
+
+background:#fef3c7;
+
+color:#92400e;
+
+}
+
+
+
+.high{
+
+background:#fee2e2;
+
+color:#991b1b;
+
+}
+
+
+
+
+.list{
+
+margin-top:10px;
+
+}
+
+
+
+
+.list span{
+
+display:inline-block;
+
+background:#e0f2fe;
+
+padding:6px 12px;
+
+border-radius:20px;
+
+margin:5px;
+
+}
+
+
+
+
+.buttons{
+
+text-align:center;
+
+margin:40px;
+
+}
+
+
+
+
+.btn{
+
+background:#2563eb;
+
+color:white;
+
+padding:14px 30px;
+
+border-radius:10px;
+
+font-size:16px;
+
+text-decoration:none;
+
+display:inline-block;
+
+margin:6px;
+
+cursor:pointer;
+
+}
+
+
+
+.secondary{
+
+background:#111827;
+
+}
+
+
+
+.pdf{
+
+background:#dc2626;
+
+}
+
+
+
+.share{
+
+background:#16a34a;
+
+}
+
+
+
+.logout{
+
+background:#ef4444;
+
+}
+
+
+
+.back{
+
+background:#7c3aed;
+
+}
+
+
+
+.error{
+
+background:#fee2e2;
+
+padding:20px;
+
+border-radius:15px;
+
+color:#991b1b;
+
+}
+
+
+
+
+h2{
+
+margin-bottom:15px;
+
+}
+
+
+
+h3{
+
+margin-top:20px;
+
+margin-bottom:10px;
+
+}
+
+
+
+p{
+
+line-height:1.7;
+
+color:#374151;
+
+}
+
+
+
+</style>
+
+
+</head>
+
+
+
+<body>
+
+
+<div class="container">
+
+
+
+
+
+<div class="header">
+
+
+<h1>
+
+🎥 AI Video Inspector
+
+</h1>
+
+
+
+<h2>
+
+{{ filename }}
+
+</h2>
+
+
+
+<p style="color:#cbd5e1">
+
+AI Copyright + SEO + Content ID Analysis
+
+</p>
+
+
+
+</div>
+
+
+
+
+
+
+
+<div class="buttons">
+
+
+<a href="/dashboard" class="btn back">
+
+⬅️ Back Dashboard
+
+</a>
+
+
+
+<a href="/" class="btn">
+
+🚀 Scan Another Video
+
+</a>
+
+
+{% if not public %}
+
+<a href="/logout" class="btn logout">
+
+🚪 Logout
+
+</a>
+
+{% endif %}
+
+
+</div>
+
+
+
+
+
+
+
+{% if report.error %}
+
+
+
+<div class="card error">
+
+
+<h2>
+
+❌ Analysis Failed
+
+</h2>
+
+
+
+<p>
+
+{{report.error}}
+
+</p>
+
+
+</div>
+
+
+
+
+{% else %}
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+
+⭐ Overall Safety Score
+
+</h2>
+
+
+
+
+{% set overall =
+report.get('overall_score',0)
+or 0
+%}
+
+
+
+
+<div class="circle">
+
+
+{% if overall <=10 %}
+
+{{overall*10}}
+
+{% else %}
+
+{{overall}}
+
+{% endif %}
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+<div class="grid">
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+
+🛡 Copyright Analysis
+
+</h2>
+
+
+
+
+{% set risk =
+report.get('copyright',{})
+.get('risk','Unknown')
+%}
+
+
+
+{% if "Low" in risk %}
+
+<span class="badge low">
+
+🟢 {{risk}}
+
+</span>
+
+
+{% elif "Moderate" in risk or "Medium" in risk %}
+
+
+<span class="badge medium">
+
+🟡 {{risk}}
+
+</span>
+
+
+{% else %}
+
+
+<span class="badge high">
+
+🔴 {{risk}}
+
+</span>
+
+
+{% endif %}
+
+
+
+
+
+
+<div class="item">
+
+Confidence:
+
+{{report.get('copyright',{}).get('confidence',0)}}%
+
+</div>
+
+
+
+<div class="item">
+
+Claim Probability:
+
+{{report.get('copyright',{}).get('claim_probability',0)}}%
+
+</div>
+
+
+
+<div class="item">
+
+Strike Probability:
+
+{{report.get('copyright',{}).get('strike_probability',0)}}%
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+
+🎵 Audio Analysis
+
+</h2>
+
+
+
+
+<div class="item">
+
+Music:
+
+{{report.get('audio',{}).get('music_detected','Unknown')}}
+
+</div>
+
+
+
+<div class="item">
+
+Voice:
+
+{{report.get('audio',{}).get('voice_type','Unknown')}}
+
+</div>
+
+
+
+<div class="item">
+
+Content ID:
+
+{{report.get('audio',{}).get('content_id_risk','Unknown')}}
+
+</div>
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+
+👁 Visual Detection
+
+</h2>
+
+
+
+<div class="item">
+
+Faces:
+
+{{report.get('visual',{}).get('faces_detected',False)}}
+
+</div>
+
+
+
+
+<h3>
+
+Logos
+
+</h3>
+
+
+<div class="list">
+
+
+{% for item in report.get('visual',{}).get('logos',[]) %}
+
+
+<span>
+
+{{item}}
+
+</span>
+
+
+{% endfor %}
+
+
+</div>
+
+
+
+
+
+<h3>
+
+Brands
+
+</h3>
+
+
+
+<div class="list">
+
+
+{% for item in report.get('visual',{}).get('brands',[]) %}
+
+
+<span>
+
+{{item}}
+
+</span>
+
+
+{% endfor %}
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+
+🚀 YouTube SEO Score
+
+</h2>
+
+
+
+
+{% set seo =
+report.get('seo',{})
+.get('score',0)
+or 0
+%}
+
+
+
+
+
+<div class="score">
+
+
+{% if seo<=10 %}
+
+{{seo*10}}
+
+{% else %}
+
+{{seo}}
+
+{% endif %}
+
+
+/100
+
+
+</div>
+
+
+
+
+
+<h3>
+
+Suggested Title
+
+</h3>
+
+
+<p>
+
+{{report.get('seo',{}).get('title','No title')}}
+
+</p>
+
+
+
+
+
+<h3>
+
+Description
+
+</h3>
+
+
+<p>
+
+{{report.get('seo',{}).get('description','No description')}}
+
+</p>
+
+
+
+
+<h3>
+
+Tags
+
+</h3>
+
+
+<div class="list">
+
+
+{% for item in report.get('seo',{}).get('tags',[]) %}
+
+
+<span>
+
+{{item}}
+
+</span>
+
+
+{% endfor %}
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+
+🖼 Thumbnail Recommendation
+
+</h2>
+
+
+<p>
+
+{{report.get('thumbnail',{}).get('suggestion','No suggestion')}}
+
+</p>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+
+🛡 Community Guidelines
+
+</h2>
+
+
+
+
+<div class="item">
+
+
+Safe:
+
+{{report.get('community_guidelines',{}).get('safe',True)}}
+
+
+</div>
+
+
+
+<div class="item">
+
+
+Issues:
+
+{{report.get('community_guidelines',{}).get('issues',[])}}
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+<div class="card">
+
+
+<h2>
+
+💡 AI Recommendations
+
+</h2>
+
+
+
+{% for item in report.get('recommendations',[]) %}
+
+
+<div class="item">
+
+✅ {{item}}
+
+</div>
+
+
+
+{% else %}
+
+
+<div class="item">
+
+No recommendations available.
+
+</div>
+
+
+
+{% endfor %}
+
+
+
+</div>
+
+
+
+
+{% endif %}
+
+
+
+
+
+
+
+
+
+<div class="buttons">
+
+
+
+{% if scan_id %}
+
+
+<a href="/download-report/{{scan_id}}" class="btn pdf">
+
+📄 Download PDF
+
+</a>
+
+
+
+{% endif %}
+
+
+
+
+
+
+{% if share_url %}
+
+
+
+<a href="{{share_url}}" 
+target="_blank"
+class="btn share">
+
+
+🔗 Share Report
+
+
+</a>
+
+
+
+{% endif %}
+
+
+
+
+</div>
+
+
+
+
+
+
+</div>
+
+
+</body>
+
+
+</html>

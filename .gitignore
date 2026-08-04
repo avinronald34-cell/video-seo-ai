@@ -1,0 +1,8 @@
+.env
+app_backup.py
+uploads/
+reports/
+*.db
+.DS_Store
+__pycache__/
+*.pyc
