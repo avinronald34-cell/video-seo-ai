@@ -6,3 +6,12 @@ reports/
 .DS_Store
 __pycache__/
 *.pyc
+app_before_payment.py
+database_before_payment.py
+config_before_payment.py
+requirements_before_payment.txt
+app_before_razorpay_api.py
+database_before_razorpay_api.py
+config_before_razorpay_api.py
+requirements_before_razorpay_api.txt
+templates/pricing_before_razorpay_api.html

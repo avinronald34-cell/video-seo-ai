@@ -5,38 +5,24 @@ load_dotenv()
 
 
 class Config:
-    # Flask
-    SECRET_KEY = os.getenv(
-        "FLASK_SECRET_KEY",
-        "video-seo-ai-secret-key"
-    )
+    SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "change-this-in-render")
 
-    # Gemini
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    MODEL_NAME = os.getenv("MODEL_NAME", "models/gemini-3.6-flash")
 
-    MODEL_NAME = os.getenv(
-    "MODEL_NAME",
-    "models/gemini-3.6-flash"
-)
-
-    # Google OAuth
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
-    # Upload Folder
-    UPLOAD_FOLDER = "uploads"
+    RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
+    RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
 
-    # Reports
+    SCAN_PRICE_RUPEES = 29
+    SCAN_PRICE_PAISE = SCAN_PRICE_RUPEES * 100
+
+    UPLOAD_FOLDER = "uploads"
     REPORT_FOLDER = "reports"
 
-    # Max Upload Size
-    MAX_CONTENT_LENGTH = 500 * 1024 * 1024
+    # Keep this conservative on a 512 MB Render instance.
+    MAX_CONTENT_LENGTH = 100 * 1024 * 1024
 
-    # Allowed Extensions
-    ALLOWED_EXTENSIONS = {
-        "mp4",
-        "mov",
-        "avi",
-        "mkv",
-        "webm"
-    }
+    ALLOWED_EXTENSIONS = {"mp4", "mov", "avi", "mkv", "webm"}

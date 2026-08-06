@@ -1,686 +1,419 @@
 import sqlite3
-
+from contextlib import closing
+from datetime import datetime, timezone
 
 DATABASE = "video_inspector.db"
 
 
-
-
-
-# =====================================================
-# DATABASE CONNECTION
-# =====================================================
-
 def get_connection():
-
-    conn = sqlite3.connect(
-        DATABASE
-    )
-
+    conn = sqlite3.connect(DATABASE, timeout=30)
     conn.row_factory = sqlite3.Row
-
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA journal_mode = WAL")
     return conn
 
 
-
-
-
-
-# =====================================================
-# INITIALIZE DATABASE
-# =====================================================
-
 def initialize_database():
-
-    conn = get_connection()
-
-    cursor = conn.cursor()
-
-
-    try:
-
-
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS scan_history
-            (
-
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-                user_email TEXT NOT NULL,
-
-                filename TEXT NOT NULL,
-
-                copyright_score TEXT,
-
-                seo_score TEXT,
-
-                content_id TEXT,
-
-                report_data TEXT,
-
-                public_token TEXT,
-
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-
-            )
-            """
-        )
-
-
-
-        # ---------------------------------
-        # Migration support
-        # ---------------------------------
-
-        cursor.execute(
-            "PRAGMA table_info(scan_history)"
-        )
-
-
-        columns = [
-
-            row["name"]
-
-            for row in cursor.fetchall()
-
-        ]
-
-
-
-        if "public_token" not in columns:
-
+    with closing(get_connection()) as conn:
+        try:
+            cursor = conn.cursor()
 
             cursor.execute(
                 """
-                ALTER TABLE scan_history
-                ADD COLUMN public_token TEXT
+                CREATE TABLE IF NOT EXISTS scan_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_email TEXT NOT NULL,
+                    filename TEXT NOT NULL,
+                    copyright_score TEXT,
+                    seo_score TEXT,
+                    content_id TEXT,
+                    report_data TEXT NOT NULL,
+                    public_token TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
                 """
             )
 
+            cursor.execute("PRAGMA table_info(scan_history)")
+            history_columns = {row["name"] for row in cursor.fetchall()}
+            if "public_token" not in history_columns:
+                cursor.execute("ALTER TABLE scan_history ADD COLUMN public_token TEXT")
 
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+                    free_scan_used INTEGER NOT NULL DEFAULT 0 CHECK (free_scan_used IN (0, 1)),
+                    scan_credits INTEGER NOT NULL DEFAULT 0 CHECK (scan_credits >= 0),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
 
-        # Index for public sharing
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS payments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_email TEXT NOT NULL,
+                    razorpay_order_id TEXT NOT NULL UNIQUE,
+                    razorpay_payment_id TEXT UNIQUE,
+                    amount_paise INTEGER NOT NULL,
+                    credits INTEGER NOT NULL DEFAULT 1,
+                    status TEXT NOT NULL DEFAULT 'created',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    paid_at TIMESTAMP,
+                    FOREIGN KEY (user_email) REFERENCES users(email)
+                )
+                """
+            )
 
-        cursor.execute(
-            """
-            CREATE INDEX IF NOT EXISTS idx_public_token
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_public_token ON scan_history(public_token)"
+            )
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_scan_user ON scan_history(user_email, id DESC)"
+            )
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_payment_user ON payments(user_email, id DESC)"
+            )
 
-            ON scan_history(public_token)
-
-            """
-        )
-
-
-
-        conn.commit()
-
-
-        print(
-            "Database initialized successfully"
-        )
-
-
-    except Exception as e:
-
-
-        conn.rollback()
-
-        print(
-            "DATABASE INIT ERROR:",
-            e
-        )
-
-
-        raise e
-
-
-    finally:
-
-
-        conn.close()
-
-
-
-
-
-
+            conn.commit()
+            print("Database initialized successfully")
+        except Exception:
+            conn.rollback()
+            raise
 
 
 # =====================================================
-# SAVE SCAN HISTORY
+# USER / CREDIT FUNCTIONS
+# =====================================================
+
+def create_user_if_not_exists(email):
+    if not email:
+        raise ValueError("Email is required")
+
+    with closing(get_connection()) as conn:
+        conn.execute(
+            """
+            INSERT INTO users (email)
+            VALUES (?)
+            ON CONFLICT(email) DO NOTHING
+            """,
+            (email.strip().lower(),),
+        )
+        conn.commit()
+
+
+def get_user(email):
+    create_user_if_not_exists(email)
+    with closing(get_connection()) as conn:
+        return conn.execute(
+            """
+            SELECT id, email, free_scan_used, scan_credits, created_at, updated_at
+            FROM users
+            WHERE email = ? COLLATE NOCASE
+            """,
+            (email.strip().lower(),),
+        ).fetchone()
+
+
+def get_user_access_status(email):
+    user = get_user(email)
+    free_available = user["free_scan_used"] == 0
+    credits = int(user["scan_credits"] or 0)
+    return {
+        "email": user["email"],
+        "free_scan_used": bool(user["free_scan_used"]),
+        "free_scan_available": free_available,
+        "scan_credits": credits,
+        "can_scan": free_available or credits > 0,
+    }
+
+
+def reserve_scan_entitlement(email):
+    """Atomically reserve one free scan or one paid credit.
+
+    Returns "free", "credit", or None when no entitlement is available.
+    Refund with restore_scan_entitlement() if processing fails.
+    """
+    normalized = email.strip().lower()
+    create_user_if_not_exists(normalized)
+
+    with closing(get_connection()) as conn:
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            user = conn.execute(
+                "SELECT free_scan_used, scan_credits FROM users WHERE email = ? COLLATE NOCASE",
+                (normalized,),
+            ).fetchone()
+
+            if user["free_scan_used"] == 0:
+                conn.execute(
+                    """
+                    UPDATE users
+                    SET free_scan_used = 1, updated_at = CURRENT_TIMESTAMP
+                    WHERE email = ? COLLATE NOCASE
+                    """,
+                    (normalized,),
+                )
+                conn.commit()
+                return "free"
+
+            if int(user["scan_credits"] or 0) > 0:
+                cursor = conn.execute(
+                    """
+                    UPDATE users
+                    SET scan_credits = scan_credits - 1,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE email = ? COLLATE NOCASE
+                      AND scan_credits > 0
+                    """,
+                    (normalized,),
+                )
+                if cursor.rowcount == 1:
+                    conn.commit()
+                    return "credit"
+
+            conn.rollback()
+            return None
+        except Exception:
+            conn.rollback()
+            raise
+
+
+def restore_scan_entitlement(email, entitlement_type):
+    if entitlement_type not in {"free", "credit"}:
+        return
+
+    normalized = email.strip().lower()
+    with closing(get_connection()) as conn:
+        if entitlement_type == "free":
+            conn.execute(
+                """
+                UPDATE users
+                SET free_scan_used = 0, updated_at = CURRENT_TIMESTAMP
+                WHERE email = ? COLLATE NOCASE
+                """,
+                (normalized,),
+            )
+        else:
+            conn.execute(
+                """
+                UPDATE users
+                SET scan_credits = scan_credits + 1, updated_at = CURRENT_TIMESTAMP
+                WHERE email = ? COLLATE NOCASE
+                """,
+                (normalized,),
+            )
+        conn.commit()
+
+
+def add_credits(email, credits):
+    credits = int(credits)
+    if credits <= 0:
+        raise ValueError("Credits must be greater than zero")
+
+    normalized = email.strip().lower()
+    create_user_if_not_exists(normalized)
+    with closing(get_connection()) as conn:
+        conn.execute(
+            """
+            UPDATE users
+            SET scan_credits = scan_credits + ?, updated_at = CURRENT_TIMESTAMP
+            WHERE email = ? COLLATE NOCASE
+            """,
+            (credits, normalized),
+        )
+        conn.commit()
+
+
+# =====================================================
+# PAYMENT FUNCTIONS
+# =====================================================
+
+def create_payment_record(user_email, order_id, amount_paise, credits=1):
+    create_user_if_not_exists(user_email)
+    with closing(get_connection()) as conn:
+        conn.execute(
+            """
+            INSERT INTO payments (
+                user_email, razorpay_order_id, amount_paise, credits, status
+            ) VALUES (?, ?, ?, ?, 'created')
+            """,
+            (user_email.strip().lower(), order_id, int(amount_paise), int(credits)),
+        )
+        conn.commit()
+
+
+def get_payment_by_order(order_id):
+    with closing(get_connection()) as conn:
+        return conn.execute(
+            "SELECT * FROM payments WHERE razorpay_order_id = ?",
+            (order_id,),
+        ).fetchone()
+
+
+def complete_payment_and_add_credits(order_id, payment_id, user_email):
+    """Mark payment paid and add credits exactly once."""
+    normalized = user_email.strip().lower()
+    with closing(get_connection()) as conn:
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            payment = conn.execute(
+                """
+                SELECT * FROM payments
+                WHERE razorpay_order_id = ?
+                  AND user_email = ? COLLATE NOCASE
+                """,
+                (order_id, normalized),
+            ).fetchone()
+
+            if not payment:
+                raise ValueError("Payment order not found")
+
+            if payment["status"] == "paid":
+                conn.commit()
+                return False
+
+            conn.execute(
+                """
+                UPDATE payments
+                SET razorpay_payment_id = ?, status = 'paid', paid_at = CURRENT_TIMESTAMP
+                WHERE razorpay_order_id = ?
+                """,
+                (payment_id, order_id),
+            )
+            conn.execute(
+                """
+                UPDATE users
+                SET scan_credits = scan_credits + ?, updated_at = CURRENT_TIMESTAMP
+                WHERE email = ? COLLATE NOCASE
+                """,
+                (int(payment["credits"]), normalized),
+            )
+            conn.commit()
+            return True
+        except Exception:
+            conn.rollback()
+            raise
+
+
+# =====================================================
+# SCAN HISTORY FUNCTIONS
 # =====================================================
 
 def save_scan_history(
-
-        user_email,
-
-        filename,
-
-        copyright_score,
-
-        seo_score,
-
-        content_id,
-
-        report_data,
-
-        public_token=None
-
+    user_email,
+    filename,
+    copyright_score,
+    seo_score,
+    content_id,
+    report_data,
+    public_token=None,
 ):
-
-
-    conn = get_connection()
-
-    cursor = conn.cursor()
-
-
-
-    try:
-
-
-        cursor.execute(
-
+    with closing(get_connection()) as conn:
+        cursor = conn.execute(
             """
-            INSERT INTO scan_history
-
-            (
-
-                user_email,
-
-                filename,
-
-                copyright_score,
-
-                seo_score,
-
-                content_id,
-
-                report_data,
-
-                public_token
-
-            )
-
-            VALUES
-
-            (?, ?, ?, ?, ?, ?, ?)
-
+            INSERT INTO scan_history (
+                user_email, filename, copyright_score, seo_score,
+                content_id, report_data, public_token
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
-
             (
-
                 user_email,
-
                 filename,
-
                 copyright_score,
-
                 seo_score,
-
                 content_id,
-
                 report_data,
-
-                public_token
-
-            )
-
+                public_token,
+            ),
         )
-
-
-
         conn.commit()
+        return cursor.lastrowid
 
-
-
-        scan_id = cursor.lastrowid
-
-
-
-        print(
-            "Scan saved ID:",
-            scan_id
-        )
-
-
-        return scan_id
-
-
-
-    except Exception as e:
-
-
-        conn.rollback()
-
-
-        print(
-            "SAVE ERROR:",
-            e
-        )
-
-
-        raise e
-
-
-
-    finally:
-
-
-        conn.close()
-
-
-
-
-
-
-
-
-# =====================================================
-# GET USER HISTORY
-# =====================================================
 
 def get_scan_history(user_email):
+    with closing(get_connection()) as conn:
+        return conn.execute(
+            """
+            SELECT id, filename, copyright_score, seo_score, content_id, created_at
+            FROM scan_history
+            WHERE user_email = ?
+            ORDER BY id DESC
+            """,
+            (user_email,),
+        ).fetchall()
+
+
+def get_report_by_id(scan_id, user_email):
+    with closing(get_connection()) as conn:
+        return conn.execute(
+            """
+            SELECT * FROM scan_history
+            WHERE id = ? AND user_email = ?
+            """,
+            (scan_id, user_email),
+        ).fetchone()
 
-
-    conn = get_connection()
-
-    cursor = conn.cursor()
-
-
-
-    cursor.execute(
-
-        """
-        SELECT
-
-            id,
-
-            filename,
-
-            copyright_score,
-
-            seo_score,
-
-            content_id,
-
-            created_at
-
-
-        FROM scan_history
-
-
-        WHERE user_email = ?
-
-
-        ORDER BY id DESC
-
-        """,
-
-        (
-            user_email,
-        )
-
-    )
-
-
-
-    scans = cursor.fetchall()
-
-
-    conn.close()
-
-
-
-    return scans
-
-
-
-
-
-
-
-# =====================================================
-# GET PRIVATE REPORT
-# =====================================================
-
-def get_report_by_id(
-
-        scan_id,
-
-        user_email
-
-):
-
-
-    conn = get_connection()
-
-    cursor = conn.cursor()
-
-
-
-    cursor.execute(
-
-        """
-        SELECT *
-
-        FROM scan_history
-
-
-        WHERE id = ?
-
-        AND user_email = ?
-
-        """,
-
-        (
-
-            scan_id,
-
-            user_email
-
-        )
-
-    )
-
-
-
-    report = cursor.fetchone()
-
-
-
-    conn.close()
-
-
-
-    return report
-
-
-
-
-
-
-
-
-# =====================================================
-# GET PUBLIC REPORT
-# =====================================================
 
 def get_public_report(token):
+    with closing(get_connection()) as conn:
+        return conn.execute(
+            "SELECT * FROM scan_history WHERE public_token = ?",
+            (token,),
+        ).fetchone()
 
-
-    conn = get_connection()
-
-    cursor = conn.cursor()
-
-
-
-    cursor.execute(
-
-        """
-        SELECT *
-
-        FROM scan_history
-
-
-        WHERE public_token = ?
-
-        """,
-
-        (
-
-            token,
-
-        )
-
-    )
-
-
-
-    report = cursor.fetchone()
-
-
-
-    conn.close()
-
-
-
-    return report
-
-
-
-
-
-
-
-
-# =====================================================
-# DASHBOARD STATISTICS
-# =====================================================
 
 def get_dashboard_stats(user_email):
-
-
-    conn = get_connection()
-
-    cursor = conn.cursor()
-
-
-
-    # Total scans
-
-    cursor.execute(
-
-        """
-        SELECT COUNT(*)
-
-        FROM scan_history
-
-
-        WHERE user_email = ?
-
-        """,
-
-        (
-            user_email,
-        )
-
-    )
-
-
-    total_scans = cursor.fetchone()[0]
-
-
-
-
-
-    # Average SEO
-
-    cursor.execute(
-
-        """
-        SELECT seo_score
-
-        FROM scan_history
-
-
-        WHERE user_email = ?
-
-        """,
-
-        (
-            user_email,
-        )
-
-    )
-
-
-    rows = cursor.fetchall()
-
-
-
-    seo_values=[]
-
-
-
-    for row in rows:
-
-
-        try:
-
-
-            value = str(
-                row["seo_score"]
-            )
-
-
-            value=value.replace(
-                "/100",
-                ""
-            )
-
-
-            value=value.split("/")[0]
-
-
-            seo_values.append(
-                int(value)
-            )
-
-
-        except:
-
-
-            continue
-
-
-
-
-
-    avg_seo = (
-
-        round(
-            sum(seo_values)
-            /
-            len(seo_values)
-        )
-
-        if seo_values
-
-        else 0
-
-    )
-
-
-
-
-
-
-
-
-    # Copyright risk count
-
-    cursor.execute(
-
-        """
-        SELECT COUNT(*)
-
-        FROM scan_history
-
-
-        WHERE user_email = ?
-
-
-        AND
-
-        (
-
-            copyright_score LIKE '%High%'
-
-            OR copyright_score LIKE '%Moderate%'
-
-            OR copyright_score LIKE '%Medium%'
-
-        )
-
-        """,
-
-        (
-            user_email,
-        )
-
-    )
-
-
-    risk_count = cursor.fetchone()[0]
-
-
-
-
-
-
-
-    # Latest scan
-
-    cursor.execute(
-
-        """
-        SELECT created_at
-
-        FROM scan_history
-
-
-        WHERE user_email = ?
-
-
-        ORDER BY id DESC
-
-
-        LIMIT 1
-
-        """,
-
-        (
-            user_email,
-        )
-
-    )
-
-
-    latest = cursor.fetchone()
-
-
-
-    conn.close()
-
-
-
-
-
-    return {
-
-
-        "total_scans":
-
-            total_scans,
-
-
-        "avg_seo":
-
-            avg_seo,
-
-
-        "risk_count":
-
-            risk_count,
-
-
-        "latest_scan":
-
-            latest["created_at"]
-
-            if latest
-
-            else "No scans"
-
-    }
+    with closing(get_connection()) as conn:
+        total_scans = conn.execute(
+            "SELECT COUNT(*) FROM scan_history WHERE user_email = ?",
+            (user_email,),
+        ).fetchone()[0]
+
+        rows = conn.execute(
+            "SELECT seo_score FROM scan_history WHERE user_email = ?",
+            (user_email,),
+        ).fetchall()
+
+        seo_values = []
+        for row in rows:
+            try:
+                value = str(row["seo_score"]).replace("/100", "").split("/")[0]
+                seo_values.append(int(float(value)))
+            except (TypeError, ValueError):
+                continue
+
+        avg_seo = round(sum(seo_values) / len(seo_values)) if seo_values else 0
+
+        risk_count = conn.execute(
+            """
+            SELECT COUNT(*) FROM scan_history
+            WHERE user_email = ?
+              AND (
+                copyright_score LIKE '%High%'
+                OR copyright_score LIKE '%Moderate%'
+                OR copyright_score LIKE '%Medium%'
+              )
+            """,
+            (user_email,),
+        ).fetchone()[0]
+
+        latest = conn.execute(
+            """
+            SELECT created_at FROM scan_history
+            WHERE user_email = ?
+            ORDER BY id DESC LIMIT 1
+            """,
+            (user_email,),
+        ).fetchone()
+
+        return {
+            "total_scans": total_scans,
+            "avg_seo": avg_seo,
+            "risk_count": risk_count,
+            "latest_scan": latest["created_at"] if latest else "No scans",
+        }
