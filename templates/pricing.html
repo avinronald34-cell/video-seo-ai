@@ -1,88 +1,696 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
 <title>Buy a Scan | AI Video Inspector</title>
+
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#f3f6fb;color:#111827}.nav{background:#111827;color:white;padding:18px 5%;display:flex;justify-content:space-between;align-items:center}.nav a{color:white;text-decoration:none;margin-left:18px}.wrap{width:92%;max-width:850px;margin:55px auto}.hero{text-align:center;margin-bottom:28px}.hero h1{font-size:40px;margin-bottom:10px}.hero p{color:#6b7280}.card{background:white;border-radius:22px;padding:40px;box-shadow:0 12px 35px rgba(0,0,0,.08);text-align:center}.price{font-size:62px;font-weight:800;color:#2563eb;margin:16px 0}.price small{font-size:20px;color:#6b7280}.features{list-style:none;padding:0;margin:25px auto;max-width:420px;text-align:left}.features li{padding:10px;border-bottom:1px solid #eee}.buy{width:100%;max-width:360px;padding:16px;border:0;border-radius:12px;background:#16a34a;color:white;font-size:18px;font-weight:700;cursor:pointer}.buy:disabled{opacity:.6}.status{margin-top:18px;min-height:24px;color:#374151}.account{background:#eff6ff;border-radius:12px;padding:15px;margin-bottom:24px}.notice{margin-top:25px;color:#6b7280;font-size:14px;line-height:1.6}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Inter, Arial, sans-serif;
+    background: #f3f6fb;
+    color: #111827;
+}
+
+.nav {
+    background: #111827;
+    color: white;
+    padding: 18px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.nav strong {
+    font-size: 22px;
+}
+
+.nav a {
+    color: white;
+    text-decoration: none;
+    margin-left: 18px;
+    font-weight: 600;
+}
+
+.nav a:hover {
+    text-decoration: underline;
+}
+
+.wrap {
+    width: 92%;
+    max-width: 850px;
+    margin: 55px auto;
+}
+
+.hero {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.hero h1 {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.hero p {
+    color: #6b7280;
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+.card {
+    background: white;
+    border-radius: 22px;
+    padding: 40px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+    text-align: center;
+}
+
+.account {
+    background: #eff6ff;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 24px;
+    font-size: 17px;
+}
+
+.price {
+    font-size: 62px;
+    font-weight: 800;
+    color: #2563eb;
+    margin: 16px 0;
+}
+
+.price small {
+    font-size: 20px;
+    color: #6b7280;
+}
+
+.features {
+    list-style: none;
+    padding: 0;
+    margin: 25px auto;
+    max-width: 440px;
+    text-align: left;
+}
+
+.features li {
+    padding: 11px;
+    border-bottom: 1px solid #eeeeee;
+    line-height: 1.5;
+}
+
+.buy {
+    width: 100%;
+    max-width: 360px;
+    padding: 16px;
+    border: 0;
+    border-radius: 12px;
+    background: #16a34a;
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.buy:hover {
+    background: #15803d;
+}
+
+.buy:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.status {
+    margin-top: 18px;
+    min-height: 24px;
+    color: #374151;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.notice {
+    margin-top: 25px;
+    color: #6b7280;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.back-link {
+    display: inline-block;
+    margin-top: 25px;
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+
+    .hero h1 {
+        font-size: 31px;
+    }
+
+    .card {
+        padding: 28px 20px;
+    }
+
+    .price {
+        font-size: 52px;
+    }
+
+    .nav {
+        justify-content: center;
+        text-align: center;
+    }
+
+    .nav div {
+        width: 100%;
+    }
+
+    .nav a {
+        display: inline-block;
+        margin: 8px;
+    }
+}
+
 </style>
+
 </head>
+
 <body>
+
 <div class="nav">
-  <strong>🎥 AI Video Inspector</strong>
-  <div><a href="/dashboard">Dashboard</a><a href="/logout">Logout</a></div>
-</div>
-<div class="wrap">
-  <div class="hero">
-    <h1>Continue scanning for ₹{{ scan_price_rupees }}</h1>
-    <p>Your first scan is free. Every additional payment adds one scan credit.</p>
-  </div>
-  <div class="card">
-    <div class="account">
-      Free scan: <strong>{{ 'Used' if account.free_scan_used else 'Available' }}</strong>
-      &nbsp;•&nbsp; Credits: <strong id="creditCount">{{ account.scan_credits }}</strong>
+
+    <strong>
+        🎥 AI Video Inspector
+    </strong>
+
+    <div>
+
+        <a href="/dashboard">
+            Dashboard
+        </a>
+
+        <a href="/logout">
+            Logout
+        </a>
+
     </div>
-    <div class="price">₹{{ scan_price_rupees }} <small>/ scan</small></div>
-    <ul class="features">
-      <li>✅ Complete copyright-risk analysis</li>
-      <li>✅ Content ID probability</li>
-      <li>✅ YouTube SEO title, description and tags</li>
-      <li>✅ PDF download and report history</li>
-      <li>✅ Credit does not expire</li>
-    </ul>
-    <button id="buyButton" class="buy">Pay ₹{{ scan_price_rupees }} & Add 1 Scan</button>
-    <div id="status" class="status"></div>
-    <div class="notice">Use Razorpay Test Mode first. A scan credit is added only after your server verifies Razorpay's payment signature.</div>
-  </div>
+
 </div>
+
+
+<div class="wrap">
+
+    <div class="hero">
+
+        <h1>
+            Continue scanning for ₹{{ scan_price_rupees }}
+        </h1>
+
+        <p>
+            Your first scan is free. Every additional successful
+            payment adds one scan credit.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="account">
+
+            Free scan:
+
+            <strong>
+                {{ 'Used' if account.free_scan_used else 'Available' }}
+            </strong>
+
+            &nbsp;•&nbsp;
+
+            Credits:
+
+            <strong id="creditCount">
+                {{ account.scan_credits }}
+            </strong>
+
+        </div>
+
+
+        <div class="price">
+
+            ₹{{ scan_price_rupees }}
+
+            <small>
+                / scan
+            </small>
+
+        </div>
+
+
+        <ul class="features">
+
+            <li>
+                ✅ Complete copyright-risk analysis
+            </li>
+
+            <li>
+                ✅ Content ID probability
+            </li>
+
+            <li>
+                ✅ YouTube SEO title, description and tags
+            </li>
+
+            <li>
+                ✅ PDF download and report history
+            </li>
+
+            <li>
+                ✅ Credit does not expire
+            </li>
+
+        </ul>
+
+
+        <button
+            id="buyButton"
+            class="buy"
+            type="button"
+            data-amount-paise="{{ scan_price_rupees * 100 }}"
+        >
+            Pay ₹{{ scan_price_rupees }} & Add 1 Scan
+        </button>
+
+
+        <div
+            id="status"
+            class="status"
+        ></div>
+
+
+        <div class="notice">
+
+            Use Razorpay Test Mode first.
+
+            <br>
+
+            A scan credit is added only after your server verifies
+            Razorpay's payment signature.
+
+        </div>
+
+
+        <a
+            href="/dashboard"
+            class="back-link"
+        >
+            ← Return to Dashboard
+        </a>
+
+    </div>
+
+</div>
+
+
 <script>
-const buyButton=document.getElementById('buyButton');
-const statusBox=document.getElementById('status');
 
-buyButton.addEventListener('click', async () => {
-  buyButton.disabled=true;
-  statusBox.textContent='Creating secure payment order...';
-  try {
-    const orderResponse=await fetch('/api/create-order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount:{{ scan_price_rupees }}*100})});
-    const order=await orderResponse.json();
-    if(!order.ok) throw new Error(order.error || 'Unable to create order');
+document.addEventListener("DOMContentLoaded", function () {
 
-    const checkout=new Razorpay({
-      key:order.key_id,
-      amount:order.amount,
-      currency:order.currency,
-      name:order.name,
-      description:order.description,
-      order_id:order.order_id,
-      prefill:order.prefill,
-      theme:{color:'#2563eb'},
-      handler:async function(response){
-        statusBox.textContent='Verifying payment securely...';
-        const verifyResponse=await fetch('/api/verify-payment',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify(response)
-        });
-        const result=await verifyResponse.json();
-        if(!result.ok) throw new Error(result.error || 'Payment verification failed');
-        statusBox.textContent='✅ Payment verified. Scan credit added.';
-        document.getElementById('creditCount').textContent=result.credits;
-        setTimeout(()=>window.location.href=result.redirect_url,900);
-      },
-      modal:{ondismiss:function(){buyButton.disabled=false;statusBox.textContent='Payment window closed.';}}
+    const buyButton =
+        document.getElementById("buyButton");
+
+    const statusBox =
+        document.getElementById("status");
+
+    const creditCount =
+        document.getElementById("creditCount");
+
+
+    function showStatus(message) {
+
+        statusBox.textContent = message;
+
+    }
+
+
+    buyButton.addEventListener("click", async function () {
+
+        buyButton.disabled = true;
+
+        showStatus(
+            "Creating secure payment order..."
+        );
+
+
+        try {
+
+            const amountPaise = Number(
+                buyButton.dataset.amountPaise
+            );
+
+
+            if (
+                !Number.isInteger(amountPaise)
+                ||
+                amountPaise < 100
+            ) {
+
+                throw new Error(
+                    "Invalid payment amount."
+                );
+
+            }
+
+
+            const orderResponse = await fetch(
+
+                "/api/create-order",
+
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body: JSON.stringify({
+
+                        amount: amountPaise
+
+                    })
+
+                }
+
+            );
+
+
+            let order;
+
+
+            try {
+
+                order =
+                    await orderResponse.json();
+
+            }
+            catch (parseError) {
+
+                throw new Error(
+                    "Server returned an invalid payment response."
+                );
+
+            }
+
+
+            if (
+                !orderResponse.ok
+                ||
+                !order.ok
+            ) {
+
+                throw new Error(
+
+                    order.error
+                    ||
+                    "Unable to create payment order."
+
+                );
+
+            }
+
+
+            if (typeof Razorpay === "undefined") {
+
+                throw new Error(
+                    "Razorpay Checkout could not be loaded."
+                );
+
+            }
+
+
+            const options = {
+
+                key:
+                    order.key_id,
+
+                amount:
+                    order.amount,
+
+                currency:
+                    order.currency,
+
+                name:
+                    order.name,
+
+                description:
+                    order.description,
+
+                order_id:
+                    order.order_id,
+
+                prefill:
+                    order.prefill || {},
+
+                theme: {
+
+                    color:
+                        "#2563eb"
+
+                },
+
+                retry: {
+
+                    enabled:
+                        true
+
+                },
+
+                handler:
+                    async function (response) {
+
+                        showStatus(
+                            "Verifying payment securely..."
+                        );
+
+
+                        try {
+
+                            const verifyResponse =
+                                await fetch(
+
+                                    "/api/verify-payment",
+
+                                    {
+
+                                        method:
+                                            "POST",
+
+                                        headers: {
+
+                                            "Content-Type":
+                                                "application/json"
+
+                                        },
+
+                                        body:
+                                            JSON.stringify({
+
+                                                razorpay_payment_id:
+                                                    response.razorpay_payment_id,
+
+                                                razorpay_order_id:
+                                                    response.razorpay_order_id,
+
+                                                razorpay_signature:
+                                                    response.razorpay_signature
+
+                                            })
+
+                                    }
+
+                                );
+
+
+                            let result;
+
+
+                            try {
+
+                                result =
+                                    await verifyResponse.json();
+
+                            }
+                            catch (parseError) {
+
+                                throw new Error(
+                                    "Server returned an invalid verification response."
+                                );
+
+                            }
+
+
+                            if (
+                                !verifyResponse.ok
+                                ||
+                                !result.ok
+                            ) {
+
+                                throw new Error(
+
+                                    result.error
+                                    ||
+                                    "Payment verification failed."
+
+                                );
+
+                            }
+
+
+                            showStatus(
+                                "✅ Payment verified. Scan credit added."
+                            );
+
+
+                            creditCount.textContent =
+                                result.credits;
+
+
+                            setTimeout(
+
+                                function () {
+
+                                    window.location.href =
+                                        result.redirect_url
+                                        ||
+                                        "/dashboard";
+
+                                },
+
+                                1000
+
+                            );
+
+                        }
+                        catch (error) {
+
+                            buyButton.disabled =
+                                false;
+
+                            showStatus(
+                                "❌ " + error.message
+                            );
+
+                        }
+
+                    },
+
+                modal: {
+
+                    ondismiss:
+                        function () {
+
+                            buyButton.disabled =
+                                false;
+
+                            showStatus(
+                                "Payment window closed."
+                            );
+
+                        }
+
+                }
+
+            };
+
+
+            const checkout =
+                new Razorpay(options);
+
+
+            checkout.on(
+
+                "payment.failed",
+
+                function (response) {
+
+                    buyButton.disabled =
+                        false;
+
+
+                    const description =
+
+                        response
+                        &&
+                        response.error
+                        &&
+                        response.error.description
+
+                            ? response.error.description
+
+                            : "Please try again.";
+
+
+                    showStatus(
+
+                        "❌ Payment failed: "
+                        +
+                        description
+
+                    );
+
+                }
+
+            );
+
+
+            checkout.open();
+
+        }
+        catch (error) {
+
+            buyButton.disabled =
+                false;
+
+            showStatus(
+                "❌ " + error.message
+            );
+
+        }
+
     });
-    checkout.on('payment.failed',function(response){
-      buyButton.disabled=false;
-      statusBox.textContent='❌ Payment failed: '+(response.error.description || 'Please try again.');
-    });
-    checkout.open();
-  } catch(error) {
-    buyButton.disabled=false;
-    statusBox.textContent='❌ '+error.message;
-  }
+
 });
+
 </script>
+
 </body>
+
 </html>
